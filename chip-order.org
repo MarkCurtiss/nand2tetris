@@ -3,11 +3,11 @@ Chip Name
 * DONE And
 * DONE Or
 * DONE Xor
-* TODO Mux
-* TODO DMux
-* TODO Not16
-* TODO And16
-* TODO Or16
+* DONE Mux
+* DONE DMux
+* DONE Not16
+* DONE And16
+* DONE Or16
 * TODO Mux16
 * TODO Or8Way
 * TODO Mux4Way16
