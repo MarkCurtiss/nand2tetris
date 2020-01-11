@@ -8,7 +8,7 @@ Chip Name
 * DONE Not16
 * DONE And16
 * DONE Or16
-* TODO Mux16
+* DONE Mux16
 * TODO Or8Way
 * TODO Mux4Way16
 * TODO Mux8Way16
