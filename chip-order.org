@@ -1,0 +1,16 @@
+Chip Name
+* DONE Not
+* DONE And
+* DONE Or
+* DONE Xor
+* TODO Mux
+* TODO DMux
+* TODO Not16
+* TODO And16
+* TODO Or16
+* TODO Mux16
+* TODO Or8Way
+* TODO Mux4Way16
+* TODO Mux8Way16
+* TODO DMux4Way
+* TODO DMux8Way
