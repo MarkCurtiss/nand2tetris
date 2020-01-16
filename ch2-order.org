@@ -1,5 +1,5 @@
 * DONE HalfAdder
-* TODO FullAdder
+* DONE FullAdder
 * TODO Add16
 * TODO Inc16
 * TODO ALU (nostat)
