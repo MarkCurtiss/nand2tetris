@@ -1,4 +1,4 @@
-* TODO HalfAdder
+* DONE HalfAdder
 * TODO FullAdder
 * TODO Add16
 * TODO Inc16
