@@ -1,6 +1,0 @@
-* DONE HalfAdder
-* DONE FullAdder
-* DONE Add16
-* DONE Inc16
-* DONE ALU (nostat)
-* DONE ALU (complete)
