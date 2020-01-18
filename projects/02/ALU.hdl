@@ -10,7 +10,7 @@
  * x+1, y+1, x-1, y-1, x&y, x|y on two 16-bit inputs,
  * according to 6 input bits denoted zx,nx,zy,ny,f,no.
  * In addition, the ALU computes two 1-bit outputs:
-n * if the ALU output == 0, zr is set to 1; otherwise zr is set to 0;
+ * if the ALU output == 0, zr is set to 1; otherwise zr is set to 0;
  * if the ALU output < 0, ng is set to 1; otherwise ng is set to 0.
  */
 
@@ -42,12 +42,13 @@ CHIP ALU {
         ng; // 1 if (out < 0),  0 otherwise
 
     PARTS:
-/*
-     x                | zx | out
-    00000000000000000 | 0  | 000000000000000
-    00000000000000000 | 1  | 111111111111111
-    10101010101010101 | 0  | 101010101010101
-    10101010101010101 | 1  | 111111111111111
-*/
-    Mux16(a=x, b=true, sel=zx, out=xAfterZero);
+    Not16(in=x, out=notX);
+    Not16(in=y, out=notY);
+
+    Mux16(a=x, b=false, sel=zx, out=xAfterZero);
+    Mux16(a=x, b=notX, sel=nx, out=xNegated);
+    Mux16(a=y, b=false, sel=zy, out=yAfterZero);
+    Mux16(a=y, b=notY, sel=ny, out=yNegated);
+
+
 }
