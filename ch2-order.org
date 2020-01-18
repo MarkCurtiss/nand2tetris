@@ -2,5 +2,5 @@
 * DONE FullAdder
 * DONE Add16
 * DONE Inc16
-* TODO ALU (nostat)
-* TODO ALU (complete)
+* DONE ALU (nostat)
+* DONE ALU (complete)
