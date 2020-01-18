@@ -55,14 +55,13 @@ CHIP ALU {
 
     Mux16(a=xAndY, b=xPlusY, sel=f, out=fOutput);
     Not16(in=fOutput, out=fOutputNegated);
-    Mux16(a=fOutput, b=fOutputNegated, sel=no, out=out, out[15]=ngCheck, out=outCheck);
+    Mux16(a=fOutput, b=fOutputNegated, sel=no, out=out, out[15]=ngCheck, out[0..7]=outLow8, out[8..15]=outHigh8);
 
     // why do we output these status variables?
-    And16(a=outCheck, b=true, out[0..7]=lowOutzr, out[8..15]=highOutzr); /* this could be replaced by extra outputs above*/
-    Or8Way(in=lowOutzr, out=lowNonZr);
-    Or8Way(in=highOutzr, out=highNonZr);
-    Or(a=lowNonZr, b=highNonZr, out=anyNonZero);
-    Not(in=anyNonZero, out=zr);
+    Or8Way(in=outLow8, out=anyLowNonZero);
+    Or8Way(in=outHigh8, out=anyHighNonZero);
+    Or(a=anyLowNonZero, b=anyHighNonZero, out=anyBitsNonZero);
+    Not(in=anyBitsNonZero, out=zr);
 
     And(a=ngCheck, b=true, out=ng);
 }
