@@ -1,5 +1,5 @@
 * DONE Bit
-* TODO Register
+* DONE Register
 * TODO RAM8
 * TODO RAM64
 * TODO RAM512
