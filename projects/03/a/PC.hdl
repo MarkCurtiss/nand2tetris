@@ -18,17 +18,12 @@ CHIP PC {
     PARTS:
     // Put your code here:
 
-    /* reset | load |  inc |  out
-       1     |  0   |  0   |  00
-       0     |  1   |  0   |  01
-       0     |  0   |  1   |  10
-       0     |  0   |  0   |  11 */
-
-    Mux4Way16(a=,b=,c=,d=,sel=,out=out);
-    Register(in=, load=false, out=regOut);
-
-    Mux16(a=regOut, b=false, sel=reset, out=resetOrPrevious);
+    Mux16(a=regOut, b=in, sel=load, out=regIn);
+    Register(in=finalOut, load=true, out=regOut, out=out);
 
     Inc16(in=regOut, out=incOut);
-    Mux16(a=resetOrPrevious, b=incOut, sel=inc, out=out);
+    Mux16(a=regOut, b=incOut, sel=inc, out=out2);
+
+    Mux16(a=out2, b=in, sel=load, out=out3);
+    Mux16(a=out3, b=false, sel=reset, out=finalOut);
 }
