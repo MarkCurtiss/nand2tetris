@@ -1,10 +1,10 @@
 #!/usr/local/bin/python3
 
-from . import Parser, Command
+from parser import Parser, Command
 import sys
 
 
-filename = sys.argv[1]
+filename = sys.argv[0]
 
 def main():
     print(f'Hello I read in file {filename}')
