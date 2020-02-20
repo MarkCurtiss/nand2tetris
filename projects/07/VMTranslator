@@ -1,5 +1,6 @@
 #!/usr/local/bin/python3
 
+from . import Parser, Command
 import sys
 
 
