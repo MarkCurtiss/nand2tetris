@@ -15,10 +15,12 @@ class Command(Enum):
     C_RETURN = 7
     C_CALL = 8
 
+    COMMANDS_WITH_ARGS = [C_PUSH, C_POP, C_FUNCTION, C_CALL]
+
+
 
 class Parser:
     def __init__(self, input):
-        print(f'Parser:: now reading {input}')
         self.input_file = open(input, 'r')
         self.next_command = None
         self.current_command = None
@@ -65,3 +67,10 @@ class Parser:
             raise ParseError('Do not call arg1 on command type C_RETURN')
         else:
             return self.current_command.split()[0]
+
+   def arg2():
+       if commandType() not in Command.COMMANDS_WITH_ARGS:
+           raise ParseError('Do not call arg2 on commands that do not take args')
+       else:
+           operands = this.current_command.split()
+           return operands[1]
