@@ -14,6 +14,22 @@ class CodeWriterTest(unittest.TestCase):
         self.tmpdir.cleanup()
 
 
-    def test_write_arithmetic(self):
+    def test_simple_add(self):
         code_writer = CodeWriter('test_output')
+        code_writer.writePushPop('push constant 7')
+        # code_writer.writePushPop('push constant 8')
         code_writer.writeArithmetic('add')
+
+        with open('test_output', 'r') as f:
+            assembly = f.readlines()
+
+            #@SP
+            #D=A
+            #M=7
+
+            self.assertEqual(assembly, [
+                '@SP\n',
+                'D=A\n',
+                'M=7\n',
+                'add\n'
+            ])
