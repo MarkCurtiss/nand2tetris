@@ -3,10 +3,12 @@
 from parser import Parser, Command
 from code_writer import CodeWriter
 import sys
+import os
 
 
 filename = sys.argv[1]
-output_filename = 'out.asm'
+path = os.path.dirname(filename)
+output_filename = f'{path}/SimpleAdd.asm'
 
 def main():
     print(f'Hello I read in file {filename} and I am writing to {output_filename}')
