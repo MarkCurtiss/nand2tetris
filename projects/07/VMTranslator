@@ -1,13 +1,24 @@
 #!/usr/local/bin/python3
 
 from parser import Parser, Command
+from code_writer import CodeWriter
 import sys
 
 
-filename = sys.argv[0]
+filename = sys.argv[1]
+output_filename = 'out.asm'
 
 def main():
-    print(f'Hello I read in file {filename}')
+    print(f'Hello I read in file {filename} and I am writing to {output_filename}')
+    parser = Parser(filename)
+    writer = CodeWriter(output_filename)
+
+    while (parser.has_more_commands()):
+        current_command = parser.advance()
+        if parser.commandType() == Command.C_PUSH:
+            writer.writePushPop(current_command) # why isn't this arg1, arg2?
+        elif parser.commandType() == Command.C_ARITHMETIC:
+            writer.writeArithmetic(parser.arg1())
 
 
 if __name__ == '__main__':

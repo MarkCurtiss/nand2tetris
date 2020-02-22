@@ -50,12 +50,11 @@ class CodeWriter:
             #M=7
             #A=A+1
 
-
-
-
             self.output_file.writelines([
                 '@SP\n',
                 'A=M\n',
                 f'M={operand}\n',
                 'A=A+1\n'
             ])
+
+            self.output_file.flush()

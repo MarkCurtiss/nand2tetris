@@ -36,36 +36,39 @@ class Parser:
 
     def advance(self):
         self.current_command = self.next_command
+        return self.current_command
 
 
     def commandType(self):
-        if self.current_command in ['add', 'sub', 'neg', 'eq', 'gt', 'lt', 'and', 'or', 'not']:
-            return Command.C_ARITHMETIC
-        elif self.current_command == 'push':
-            return Command.C_PUSH
-        elif self.current_command == 'pop':
-            return Command.C_POP
-        elif self.current_command == 'label':
-            return Command.C_LABEL
-        elif self.current_command == 'goto':
-            return Command.C_GOTO
-        elif self.current_command == 'if-goto':
-            return Command.C_IF
-        elif self.current_command == 'function':
-            return Command.C_FUNCTION
-        elif self.current_command == 'return':
+        if self.current_command == 'return':
             return Command.C_RETURN
-        elif self.current_command == 'call':
+
+        operator = self.arg1()
+
+        if operator in ['add', 'sub', 'neg', 'eq', 'gt', 'lt', 'and', 'or', 'not']:
+            return Command.C_ARITHMETIC
+        elif operator == 'push':
+            return Command.C_PUSH
+        elif operator == 'pop':
+            return Command.C_POP
+        elif operator == 'label':
+            return Command.C_LABEL
+        elif operator == 'goto':
+            return Command.C_GOTO
+        elif operator == 'if-goto':
+            return Command.C_IF
+        elif operator == 'function':
+            return Command.C_FUNCTION
+        elif operator == 'return':
+            return Command.C_RETURN
+        elif operator == 'call':
             return Command.C_CALL
-        else:
-            raise ParseError(f'Unrecognized command {self.current_command}')
 
 
     def arg1(self):
-        if self.commandType() == Command.C_RETURN:
-            raise ParseError('Do not call arg1 on command type C_RETURN')
-        else:
+        if self.current_command and not self.current_command.isspace():
             return self.current_command.split()[0]
+
 
     def arg2(self):
        if commandType() not in Command.COMMANDS_WITH_ARGS:
