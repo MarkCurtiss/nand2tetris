@@ -67,7 +67,7 @@ class Parser:
         else:
             return self.current_command.split()[0]
 
-   def arg2():
+    def arg2(self):
        if commandType() not in Command.COMMANDS_WITH_ARGS:
            raise ParseError('Do not call arg2 on commands that do not take args')
        else:
