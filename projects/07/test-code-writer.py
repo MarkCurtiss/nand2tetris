@@ -17,19 +17,29 @@ class CodeWriterTest(unittest.TestCase):
     def test_simple_add(self):
         code_writer = CodeWriter('test_output')
         code_writer.writePushPop('push constant 7')
-        # code_writer.writePushPop('push constant 8')
+        code_writer.writePushPop('push constant 8')
         code_writer.writeArithmetic('add')
 
         with open('test_output', 'r') as f:
-            assembly = f.readlines()
-
-            #@SP
-            #D=A
-            #M=7
+            assembly = [x.rstrip() for x in f.readlines()]
 
             self.assertEqual(assembly, [
-                '@SP\n',
-                'D=A\n',
-                'M=7\n',
-                'add\n'
+                # push constant 7
+                '@SP',
+                'A=M',
+                'M=7',
+                'A=A+1',
+
+                #push constant 8
+                '@SP',
+                'A=M',
+                'M=8',
+                'A=A+1',
+
+                # add
+                '@SP',
+                'D=M',
+                'A=A-1',
+                'D=D+M',
+                'M=D'
             ])

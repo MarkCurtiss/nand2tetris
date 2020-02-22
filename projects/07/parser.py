@@ -18,7 +18,6 @@ class Command(Enum):
     COMMANDS_WITH_ARGS = [C_PUSH, C_POP, C_FUNCTION, C_CALL]
 
 
-
 class Parser:
     def __init__(self, input):
         self.input_file = open(input, 'r')
