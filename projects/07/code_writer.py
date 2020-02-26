@@ -34,14 +34,16 @@ class CodeWriter:
             ]
         elif operator == 'eq':
             assembly = [
-                '@SP',     # 0: 256
-                'A=M-1',   # A: 255
-                'D=M',     # D: RAM[256]
-                'A=A-1',   # A: 254
-                'D=D-M',   # D: RAM[255] -- RAM[254]
-#//                'M=A',     # SP: 254
-                '@TRUE',   # A: true
-                'D;JEQ',   # JMP if eq
+                '@SP',
+                'M=M-1',
+                'A=M',
+                'D=M',
+                '@SP',
+                'M=M-1',
+                'A=M',
+                'D=D-M',
+                '@TRUE',
+                'D;JEQ',
 
                 '@FALSE',
                 '0;JMP',
