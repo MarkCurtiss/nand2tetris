@@ -1,10 +1,13 @@
+import os
+
 class CodeError(Exception):
     pass
 
 class CodeWriter:
     def __init__(self, output):
+        self.file_name = None
+        self.label_count = 0
         self.setFileName(output)
-
 
     def Close(self):
         self.output_file.close()
@@ -13,9 +16,15 @@ class CodeWriter:
     def __del__(self):
         self.Close()
 
+    def make_label(self):
+        label = f'{os.path.basename(self.file_name)}.{self.label_count}'
+        self.label_count += 1
+        return label
+
 
     def setFileName(self, output):
-        self.output_file = open(output, 'w')
+        self.file_name = output
+        self.output_file = open(self.file_name, 'w')
 
 
     def writeArithmetic(self, operator):
@@ -33,6 +42,8 @@ class CodeWriter:
                 'M=D'
             ]
         elif operator == 'eq':
+            (false_label, true_label, end_label)  = [self.make_label() for x in range(3)]
+
             assembly = [
                 '@SP',
                 'M=M-1',
@@ -42,36 +53,32 @@ class CodeWriter:
                 'M=M-1',
                 'A=M',
                 'D=D-M',
-                '@TRUE',
+                f'@{true_label}',
                 'D;JEQ',
 
-                '@FALSE',
+                f'@{false_label}',
                 '0;JMP',
 
-                '(TRUE)',
+                f'({true_label})',
                 '@SP',
                 'A=M',
                 'M=1',
-                '@END',
+                f'@{end_label}',
                 '0;JMP',
 
-                '(FALSE)',
+                f'({false_label})',
                 '@SP',
                 'A=M',
                 'M=0',
-                '@END',
+                f'@{end_label}',
                 '0;JMP',
 
-                '(END)'
+                f'({end_label})',
+                '@SP',
+                'M=M+1'
             ]
 
-
-
         self.output_file.writelines([x + '\n' for x in assembly])
-
-
-
-
         self.output_file.flush()
 
     def writePushPop(self, command):
