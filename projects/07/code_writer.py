@@ -29,11 +29,6 @@ class CodeWriter:
 
     def writeArithmetic(self, operator):
         assembly = []
-        # i think my add and sub are messed up;
-        # starts on line 342 of the generated assembly
-        # line 363 where is it starts to add
-        # oh I see; I grab the values out of the stack
-        # but I don't actually change the stack pointer as i go
         if operator == 'add':
             assembly = [
                 '@SP',
@@ -48,29 +43,16 @@ class CodeWriter:
                 '@SP',
                 'M=M+1'
             ]
-#             assembly = [
-#                 '@SP',
-#                 'A=M-1',
-#                 'D=M',
-#                 'A=A-1',
-#                 'D=D+M',
-#                 'M=D',
-# #                'D=A+1',
-# #                '@SP',
-# #                'M=D',
-#                 '@SP',
-#                 'M=M+1'
-#             ]
         elif operator == 'sub':
             assembly = [
                 '@SP',
-                'A=M-1',
+                'M=M-1',
+                'A=M',
                 'D=M',
-                'A=A-1',
-                'D=D-M',
-                'M=D',
-                'D=A+1',
                 '@SP',
+                'M=M-1',
+                'A=M',
+                'D=M-D',
                 'M=D',
                 '@SP',
                 'M=M+1'
@@ -78,6 +60,7 @@ class CodeWriter:
         elif operator == 'neg':
             assembly = [
                 '@SP',
+                'M=M-1',
                 'A=M',
                 'M=-M',
                 '@SP',
@@ -86,32 +69,33 @@ class CodeWriter:
         elif operator == 'and':
             assembly = [
                 '@SP',
+                'M=M-1',
                 'A=M',
                 'D=M',
-                'A=A-1',
-                'D=M&D',
                 '@SP',
+                'M=M-1',
                 'A=M',
-                'M=D',
+                'M=M&D',
                 '@SP',
                 'M=M+1'
             ]
         elif operator == 'or':
             assembly = [
                 '@SP',
+                'M=M-1',
                 'A=M',
                 'D=M',
-                'A=A-1',
-                'D=M|D',
                 '@SP',
+                'M=M-1',
                 'A=M',
-                'M=D',
+                'M=M|D',
                 '@SP',
                 'M=M+1'
             ]
         elif operator == 'not':
             assembly = [
                 '@SP',
+                'M=M-1',
                 'A=M',
                 'M=!M',
                 '@SP',
