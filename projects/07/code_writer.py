@@ -29,17 +29,93 @@ class CodeWriter:
 
     def writeArithmetic(self, operator):
         assembly = []
+        # i think my add and sub are messed up;
+        # starts on line 342 of the generated assembly
+        # line 363 where is it starts to add
+        # oh I see; I grab the values out of the stack
+        # but I don't actually change the stack pointer as i go
         if operator == 'add':
+            assembly = [
+                '@SP',
+                'M=M-1',
+                'A=M',
+                'D=M',
+                '@SP',
+                'M=M-1',
+                'A=M',
+                'D=D+M',
+                'M=D',
+                '@SP',
+                'M=M+1'
+            ]
+#             assembly = [
+#                 '@SP',
+#                 'A=M-1',
+#                 'D=M',
+#                 'A=A-1',
+#                 'D=D+M',
+#                 'M=D',
+# #                'D=A+1',
+# #                '@SP',
+# #                'M=D',
+#                 '@SP',
+#                 'M=M+1'
+#             ]
+        elif operator == 'sub':
             assembly = [
                 '@SP',
                 'A=M-1',
                 'D=M',
                 'A=A-1',
-                'D=D+M',
+                'D=D-M',
                 'M=D',
                 'D=A+1',
                 '@SP',
-                'M=D'
+                'M=D',
+                '@SP',
+                'M=M+1'
+            ]
+        elif operator == 'neg':
+            assembly = [
+                '@SP',
+                'A=M',
+                'M=-M',
+                '@SP',
+                'M=M+1'
+            ]
+        elif operator == 'and':
+            assembly = [
+                '@SP',
+                'A=M',
+                'D=M',
+                'A=A-1',
+                'D=M&D',
+                '@SP',
+                'A=M',
+                'M=D',
+                '@SP',
+                'M=M+1'
+            ]
+        elif operator == 'or':
+            assembly = [
+                '@SP',
+                'A=M',
+                'D=M',
+                'A=A-1',
+                'D=M|D',
+                '@SP',
+                'A=M',
+                'M=D',
+                '@SP',
+                'M=M+1'
+            ]
+        elif operator == 'not':
+            assembly = [
+                '@SP',
+                'A=M',
+                'M=!M',
+                '@SP',
+                'M=M+1'
             ]
         elif operator == 'eq':
             (false_label, true_label, end_label)  = [self.make_label() for x in range(3)]
@@ -62,7 +138,7 @@ class CodeWriter:
                 f'({true_label})',
                 '@SP',
                 'A=M',
-                'M=1',
+                'M=-1',
                 f'@{end_label}',
                 '0;JMP',
 
@@ -77,6 +153,77 @@ class CodeWriter:
                 '@SP',
                 'M=M+1'
             ]
+        elif operator == 'lt':
+            (false_label, true_label, end_label)  = [self.make_label() for x in range(3)]
+            assembly = [
+                '@SP',
+                'M=M-1',
+                'A=M',
+                'D=M',   #y
+                '@SP',
+                'M=M-1',
+                'A=M',
+                'D=M-D', #x - y
+                f'@{true_label}',
+                'D;JLT',
+
+                f'@{false_label}',
+                '0;JMP',
+
+                f'({true_label})',
+                '@SP',
+                'A=M',
+                'M=-1',
+                f'@{end_label}',
+                '0;JMP',
+
+                f'({false_label})',
+                '@SP',
+                'A=M',
+                'M=0',
+                f'@{end_label}',
+                '0;JMP',
+
+                f'({end_label})',
+                '@SP',
+                'M=M+1'
+            ]
+        elif operator == 'gt':
+            (false_label, true_label, end_label)  = [self.make_label() for x in range(3)]
+            assembly = [
+                '@SP',
+                'M=M-1',
+                'A=M',
+                'D=M',   #y
+                '@SP',
+                'M=M-1',
+                'A=M',
+                'D=D-M', #y - x
+                f'@{true_label}',
+                'D;JLT',
+
+                f'@{false_label}',
+                '0;JMP',
+
+                f'({true_label})',
+                '@SP',
+                'A=M',
+                'M=-1',
+                f'@{end_label}',
+                '0;JMP',
+
+                f'({false_label})',
+                '@SP',
+                'A=M',
+                'M=0',
+                f'@{end_label}',
+                '0;JMP',
+
+                f'({end_label})',
+                '@SP',
+                'M=M+1'
+            ]
+
 
         self.output_file.writelines([x + '\n' for x in assembly])
         self.output_file.flush()
