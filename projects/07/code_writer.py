@@ -214,6 +214,8 @@ class CodeWriter:
 
     def writePushPop(self, command):
         operator, label, operand = command.split()
+        assembly = []
+
         if(operator == 'push'):
             assembly = [x+'\n' for x in [
                 f'@{operand}', # put constant in A
@@ -225,5 +227,42 @@ class CodeWriter:
                 'M=M+1'        # RAM[0] == 256
             ]]
 
-            self.output_file.writelines(assembly)
-            self.output_file.flush()
+
+        elif (operator == 'pop'):
+            # pop the stack
+            # push it to the offset + the address
+            offset_ptr = ''
+            if label == 'local':
+                offset_ptr = 'LCL'
+            elif label == 'argument':
+                offset_ptr = 'ARG'
+            elif label == 'this':
+                offset_ptr = 'THIS'
+            elif label == 'that':
+                offset_ptr = 'THAT'
+            elif label == 'temp':
+                offset_ptr = '@5' #tmp starts at RAM[5] and runs to RAM[12]
+
+            assembly = [
+                '@SP',
+                'M=M-1',
+                'A=M',
+                'D=M',  #D = RAM[SP]
+                '@R13',
+                'M=D',  #R13 holds the pop'ed value
+                f'@{offset_ptr}', #A = base of segment
+                'A=M'
+                'D=M',
+                f'@{operand}', #A = offset
+                'D=A+D', #D is now the destination address
+                '@R14'
+                'M=D',  #R14 holds the destination address
+                '@R13',
+                'D=M',  # now has the popped value
+                '@R14',
+                'A=M'
+        ]
+
+
+        self.output_file.writelines([x + '\n' for x in assembly])
+        self.output_file.flush()
