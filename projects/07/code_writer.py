@@ -3,6 +3,15 @@ import os
 class CodeError(Exception):
     pass
 
+offset_by_label = {
+    'local': 'LCL',
+    'argument': 'ARG',
+    'this': 'THIS',
+    'that': 'THAT',
+    'temp': '5' #tmp starts at RAM[5] and runs to RAM[12]
+}
+
+
 class CodeWriter:
     def __init__(self, output):
         self.file_name = None
@@ -217,51 +226,70 @@ class CodeWriter:
         assembly = []
 
         if(operator == 'push'):
-            assembly = [x+'\n' for x in [
-                f'@{operand}', # put constant in A
-                'D=A',         # D = constant
-                '@SP',         # 0 in A
-                'A=M',         # A == 256
-                'M=D',         # RAM[256] = constant
-                '@SP',         # A == 256
-                'M=M+1'        # RAM[0] == 256
-            ]]
+            isConstant = False
+            if label == 'constant':
+                isConstant = True
+            elif label in offset_by_label:
+                offset_ptr = offset_by_label[label]
+            else:
+                raise CodeError(f'Unrecognized label {label} passed to push (command was {command})')
 
+            if isConstant:
+                assembly = [
+                    f'@{operand}', # put constant in A
+                    'D=A',         # D = constant
+                    '@SP',         # 0 in A
+                    'A=M',         # A == 256
+                    'M=D',         # RAM[256] = constant
+                    '@SP',         # A == 256
+                    'M=M+1'        # RAM[0] == 256
+                ]
+            else:
+                # this is WRONG. instead,
+                # find the value at the label+offset
+                # push it onto the stack
+                # increment the stack pointer.
+                assembly = [
+                    f'@{offset_ptr}', #A = base of segment
+                    'D=M',
+                    f'@{operand}', # A = offset
+                    'D=A+D',       # D is now the destination address
+                    '@R13',
+                    'M=D',  # R13 has the address
+
+                    f'@{operand}', # put constant in A
+                    'D=A',         # D = constant
+                    '@R13',
+                    'A=M',
+                    'M=D',
+                    '@SP',         # A == 256
+                    'M=M+1'        # RAM[0] == 256
+                ]
 
         elif (operator == 'pop'):
-            # pop the stack
-            # push it to the offset + the address
             offset_ptr = ''
-            if label == 'local':
-                offset_ptr = 'LCL'
-            elif label == 'argument':
-                offset_ptr = 'ARG'
-            elif label == 'this':
-                offset_ptr = 'THIS'
-            elif label == 'that':
-                offset_ptr = 'THAT'
-            elif label == 'temp':
-                offset_ptr = '@5' #tmp starts at RAM[5] and runs to RAM[12]
+            if label in offset_by_label:
+                offset_ptr = offset_by_label[label]
+            else:
+                raise CodeError(f'Unrecognized label {label} passed to pop (command was {command})')
+
 
             assembly = [
+                f'@{offset_ptr}', #A = base of segment
+                'D=M',
+                f'@{operand}', # A = offset
+                'D=A+D',       # D is now the destination address
+                '@R13',
+                'M=D',  # R13 has the address
                 '@SP',
                 'M=M-1',
                 'A=M',
-                'D=M',  #D = RAM[SP]
+                'D=M',  #D holds the pop'ed value
+
                 '@R13',
-                'M=D',  #R13 holds the pop'ed value
-                f'@{offset_ptr}', #A = base of segment
-                'A=M'
-                'D=M',
-                f'@{operand}', #A = offset
-                'D=A+D', #D is now the destination address
-                '@R14'
-                'M=D',  #R14 holds the destination address
-                '@R13',
-                'D=M',  # now has the popped value
-                '@R14',
-                'A=M'
-        ]
+                'A=M',
+                'M=D'
+            ]
 
 
         self.output_file.writelines([x + '\n' for x in assembly])

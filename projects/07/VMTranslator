@@ -18,7 +18,7 @@ def main():
 
     while (parser.has_more_commands()):
         current_command = parser.advance()
-        if parser.commandType() == Command.C_PUSH:
+        if parser.commandType() == Command.C_PUSH or parser.commandType() == Command.C_POP:
             writer.writePushPop(current_command) # why isn't this arg1, arg2?
         elif parser.commandType() == Command.C_ARITHMETIC:
             writer.writeArithmetic(parser.arg1())
