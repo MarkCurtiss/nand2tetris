@@ -245,23 +245,23 @@ class CodeWriter:
                     'M=M+1'        # RAM[0] == 256
                 ]
             else:
-                # this is WRONG. instead,
-                # find the value at the label+offset
-                # push it onto the stack
-                # increment the stack pointer.
+                get_base = ''
+                if label == 'temp':
+                    get_base = 'D=A'
+                else:
+                    get_base = 'D=M'
+
                 assembly = [
                     f'@{offset_ptr}', #A = base of segment
-                    'D=M',
+                    f'{get_base}',
                     f'@{operand}', # A = offset
                     'D=A+D',       # D is now the destination address
-                    '@R13',
-                    'M=D',  # R13 has the address
+                    'A=D',         # A is now the address
+                    'D=M',         # D has the value
 
-                    f'@{operand}', # put constant in A
-                    'D=A',         # D = constant
-                    '@R13',
-                    'A=M',
-                    'M=D',
+                    '@SP',
+                    'A=M',         # A == 256
+                    'M=D',         # RAM[256] = value from stack
                     '@SP',         # A == 256
                     'M=M+1'        # RAM[0] == 256
                 ]
@@ -273,10 +273,16 @@ class CodeWriter:
             else:
                 raise CodeError(f'Unrecognized label {label} passed to pop (command was {command})')
 
+            get_base = ''
+
+            if label == 'temp':
+                get_base = 'D=A'
+            else:
+                get_base = 'D=M'
 
             assembly = [
                 f'@{offset_ptr}', #A = base of segment
-                'D=M',
+                get_base,
                 f'@{operand}', # A = offset
                 'D=A+D',       # D is now the destination address
                 '@R13',
