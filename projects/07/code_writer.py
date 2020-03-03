@@ -227,14 +227,35 @@ class CodeWriter:
 
         if(operator == 'push'):
             isConstant = False
+            isPointer = False
             if label == 'constant':
                 isConstant = True
             elif label in offset_by_label:
                 offset_ptr = offset_by_label[label]
+            elif label == 'pointer':
+                isPointer = True
             else:
                 raise CodeError(f'Unrecognized label {label} passed to push (command was {command})')
 
-            if isConstant:
+            if isPointer:
+                address = ''
+                if int(operand) == 0:
+                    address = 'THIS'
+                elif int(operand) == 1:
+                    address = 'THAT'
+                else:
+                    raise CodeError(f'Unrecognized push pointer combination (command was {command})')
+
+                assembly = [
+                    f'@{address}',
+                    'D=M',
+                    '@SP',
+                    'A=M',
+                    'M=D',
+                    '@SP',
+                    'M=M+1'
+                ]
+            elif isConstant:
                 assembly = [
                     f'@{operand}', # put constant in A
                     'D=A',         # D = constant
@@ -267,35 +288,56 @@ class CodeWriter:
                 ]
 
         elif (operator == 'pop'):
+            is_pointer = False
             offset_ptr = ''
             if label in offset_by_label:
                 offset_ptr = offset_by_label[label]
+            elif label == 'pointer':
+                is_pointer = True
             else:
                 raise CodeError(f'Unrecognized label {label} passed to pop (command was {command})')
 
-            get_base = ''
-
-            if label == 'temp':
-                get_base = 'D=A'
+            if is_pointer:
+                address = ''
+                if int(operand) == 0:
+                    address = 'THIS'
+                elif int(operand) == 1:
+                    address = 'THAT'
+                else:
+                    raise CodeError(f'Unrecognized pop pointer combination (command was {command})')
+                    
+                assembly = [
+                    '@SP',
+                    'M=M-1',
+                    'A=M',
+                    'D=M',  #D holds the pop'ed value
+                    f'@{address}',
+                    'M=D'
+                ]
             else:
-                get_base = 'D=M'
+                get_base = ''
 
-            assembly = [
-                f'@{offset_ptr}', #A = base of segment
-                get_base,
-                f'@{operand}', # A = offset
-                'D=A+D',       # D is now the destination address
-                '@R13',
-                'M=D',  # R13 has the address
-                '@SP',
-                'M=M-1',
-                'A=M',
-                'D=M',  #D holds the pop'ed value
+                if label == 'temp':
+                    get_base = 'D=A'
+                else:
+                    get_base = 'D=M'
 
-                '@R13',
-                'A=M',
-                'M=D'
-            ]
+                assembly = [
+                    f'@{offset_ptr}', #A = base of segment
+                    get_base,
+                    f'@{operand}', # A = offset
+                    'D=A+D',       # D is now the destination address
+                    '@R13',
+                    'M=D',  # R13 has the address
+                    '@SP',
+                    'M=M-1',
+                    'A=M',
+                    'D=M',  #D holds the pop'ed value
+
+                    '@R13',
+                    'A=M',
+                    'M=D'
+                ]
 
 
         self.output_file.writelines([x + '\n' for x in assembly])
