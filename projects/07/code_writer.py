@@ -228,10 +228,14 @@ class CodeWriter:
         if(operator == 'push'):
             isConstant = False
             isPointer = False
+            isStatic = False
+
             if label == 'constant':
                 isConstant = True
             elif label in offset_by_label:
                 offset_ptr = offset_by_label[label]
+            elif label == 'static':
+                isStatic = True
             elif label == 'pointer':
                 isPointer = True
             else:
@@ -248,6 +252,17 @@ class CodeWriter:
 
                 assembly = [
                     f'@{address}',
+                    'D=M',
+                    '@SP',
+                    'A=M',
+                    'M=D',
+                    '@SP',
+                    'M=M+1'
+                ]
+            elif isStatic:
+                static_label = f'{os.path.basename(self.file_name)}.{operand}'
+                assembly = [
+                    f'@{static_label}',
                     'D=M',
                     '@SP',
                     'A=M',
@@ -290,10 +305,14 @@ class CodeWriter:
         elif (operator == 'pop'):
             is_pointer = False
             offset_ptr = ''
+            isStatic = False
+
             if label in offset_by_label:
                 offset_ptr = offset_by_label[label]
             elif label == 'pointer':
                 is_pointer = True
+            elif label == 'static':
+                isStatic = True
             else:
                 raise CodeError(f'Unrecognized label {label} passed to pop (command was {command})')
 
@@ -305,7 +324,7 @@ class CodeWriter:
                     address = 'THAT'
                 else:
                     raise CodeError(f'Unrecognized pop pointer combination (command was {command})')
-                    
+
                 assembly = [
                     '@SP',
                     'M=M-1',
@@ -314,9 +333,18 @@ class CodeWriter:
                     f'@{address}',
                     'M=D'
                 ]
+            elif isStatic:
+                static_label = f'{os.path.basename(self.file_name)}.{operand}'
+                assembly = [
+                    '@SP',
+                    'M=M-1',
+                    'A=M',
+                    'D=M',  #D holds the pop'ed value
+                    f'@{static_label}',
+                    'M=D'
+                ]
             else:
                 get_base = ''
-
                 if label == 'temp':
                     get_base = 'D=A'
                 else:
