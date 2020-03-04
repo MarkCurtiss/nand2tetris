@@ -216,6 +216,86 @@ class CodeWriterTest(unittest.TestCase):
             'M=M+1'
         ])
 
+    def test_push_constant(self):
+        self.code_writer.writePushPop('push constant 37')
+        self.assertGeneratedAssemblyEqual([
+            '@37',
+            'D=A',
+            '@SP',
+            'A=M',
+            'M=D',
+            '@SP',
+            'M=M+1'
+        ])
+
+    def test_push_static(self):
+        self.code_writer.writePushPop('push static 37')
+        self.assertGeneratedAssemblyEqual([
+            '@test_output.37',
+            'D=M',
+            '@SP',
+            'A=M',
+            'M=D',
+            '@SP',
+            'M=M+1'
+        ])
+
+    def test_push_argument(self):
+        self.code_writer.writePushPop('push argument 800')
+        self.assertGeneratedAssemblyEqual([
+            '@ARG',
+            'D=M',
+            '@800',
+            'D=A+D',
+            'A=D',
+            'D=M',
+            '@SP',
+            'A=M',
+            'M=D',
+            '@SP',
+            'M=M+1'
+        ])
+
+    def test_push_temp(self):
+        self.code_writer.writePushPop('push temp 876')
+        self.assertGeneratedAssemblyEqual([
+            '@5',
+            'D=A',
+            '@876',
+            'D=A+D',
+            'A=D',
+            'D=M',
+            '@SP',
+            'A=M',
+            'M=D',
+            '@SP',
+            'M=M+1'
+        ])
+
+    def test_push_pointer_0(self):
+        self.code_writer.writePushPop('push pointer 0')
+        self.assertGeneratedAssemblyEqual([
+            '@THIS',
+            'D=M',
+            '@SP',
+            'A=M',
+            'M=D',
+            '@SP',
+            'M=M+1'
+        ])
+
+    def test_push_pointer_1(self):
+        self.code_writer.writePushPop('push pointer 1')
+        self.assertGeneratedAssemblyEqual([
+            '@THAT',
+            'D=M',
+            '@SP',
+            'A=M',
+            'M=D',
+            '@SP',
+            'M=M+1'
+        ])
+
 
     def assertGeneratedAssemblyEqual(self, assembly=[]):
         self.assertAssemblyEqual(self.assembly_filename, assembly)
