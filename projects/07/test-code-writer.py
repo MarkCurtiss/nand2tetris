@@ -10,6 +10,7 @@ class CodeWriterTest(unittest.TestCase):
         os.chdir(self.tmpdir.name)
         self.assembly_filename = 'test_output'
         self.code_writer = CodeWriter(self.assembly_filename)
+        self.maxDiff = None
 
 
     def __del__(self):

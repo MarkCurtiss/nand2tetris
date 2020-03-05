@@ -36,190 +36,115 @@ class CodeWriter:
         self.output_file = open(self.file_name, 'w')
 
 
+    def advanceStackPointer(self):
+        return ['@SP', 'M=M+1']
+
+
+    def popStackToD(self, d_assignment='D=M'):
+        return ['@SP', 'M=M-1', 'A=M', d_assignment]
+
+
+    def compare(self, condition_for_jmp):
+        (false_label, true_label, end_label)  = [self.make_label() for x in range(3)]
+        return [
+            f'@{true_label}',
+            f'{condition_for_jmp}',
+
+            f'@{false_label}',
+            '0;JMP',
+
+            f'({true_label})',
+            '@SP',
+            'A=M',
+            'M=-1',
+            f'@{end_label}',
+            '0;JMP',
+
+            f'({false_label})',
+            '@SP',
+            'A=M',
+            'M=0',
+            f'@{end_label}',
+            '0;JMP',
+
+            f'({end_label})'
+        ]
+
+
+    def assignStackFrom(self, from_value):
+        return [
+            f'@{from_value}',
+            'D=M',
+            '@SP',
+            'A=M',
+            'M=D'
+        ]
+
+
     def writeArithmetic(self, operator):
         assembly = []
         if operator == 'add':
             assembly = [
-                '@SP',
-                'M=M-1',
-                'A=M',
-                'D=M',
-                '@SP',
-                'M=M-1',
-                'A=M',
-                'D=D+M',
+                *self.popStackToD(),
+                *self.popStackToD(d_assignment='D=D+M'),
                 'M=D',
-                '@SP',
-                'M=M+1'
+                *self.advanceStackPointer()
             ]
         elif operator == 'sub':
             assembly = [
-                '@SP',
-                'M=M-1',
-                'A=M',
-                'D=M',
-                '@SP',
-                'M=M-1',
-                'A=M',
-                'D=M-D',
+                *self.popStackToD(),
+                *self.popStackToD(d_assignment='D=M-D'),
                 'M=D',
-                '@SP',
-                'M=M+1'
-            ]
+                *self.advanceStackPointer()
+        ]
         elif operator == 'neg':
             assembly = [
-                '@SP',
-                'M=M-1',
-                'A=M',
-                'M=-M',
-                '@SP',
-                'M=M+1'
+                *self.popStackToD(d_assignment='M=-M'),
+                *self.advanceStackPointer()
             ]
         elif operator == 'and':
             assembly = [
-                '@SP',
-                'M=M-1',
-                'A=M',
-                'D=M',
-                '@SP',
-                'M=M-1',
-                'A=M',
-                'M=M&D',
-                '@SP',
-                'M=M+1'
+                *self.popStackToD(),
+                *self.popStackToD(d_assignment='M=M&D'),
+                *self.advanceStackPointer()
             ]
         elif operator == 'or':
             assembly = [
-                '@SP',
-                'M=M-1',
-                'A=M',
-                'D=M',
-                '@SP',
-                'M=M-1',
-                'A=M',
-                'M=M|D',
-                '@SP',
-                'M=M+1'
+                *self.popStackToD(),
+                *self.popStackToD(d_assignment='M=M|D'),
+                *self.advanceStackPointer()
             ]
         elif operator == 'not':
             assembly = [
-                '@SP',
-                'M=M-1',
-                'A=M',
-                'M=!M',
-                '@SP',
-                'M=M+1'
+                *self.popStackToD(d_assignment='M=!M'),
+                *self.advanceStackPointer()
             ]
+
         elif operator == 'eq':
-            (false_label, true_label, end_label)  = [self.make_label() for x in range(3)]
-
             assembly = [
-                '@SP',
-                'M=M-1',
-                'A=M',
-                'D=M',
-                '@SP',
-                'M=M-1',
-                'A=M',
-                'D=D-M',
-                f'@{true_label}',
-                'D;JEQ',
-
-                f'@{false_label}',
-                '0;JMP',
-
-                f'({true_label})',
-                '@SP',
-                'A=M',
-                'M=-1',
-                f'@{end_label}',
-                '0;JMP',
-
-                f'({false_label})',
-                '@SP',
-                'A=M',
-                'M=0',
-                f'@{end_label}',
-                '0;JMP',
-
-                f'({end_label})',
-                '@SP',
-                'M=M+1'
+                *self.popStackToD(),
+                *self.popStackToD(d_assignment='D=D-M'),
+                *self.compare('D;JEQ'),
+                *self.advanceStackPointer()
             ]
         elif operator == 'lt':
-            (false_label, true_label, end_label)  = [self.make_label() for x in range(3)]
             assembly = [
-                '@SP',
-                'M=M-1',
-                'A=M',
-                'D=M',   #y
-                '@SP',
-                'M=M-1',
-                'A=M',
-                'D=M-D', #x - y
-                f'@{true_label}',
-                'D;JLT',
-
-                f'@{false_label}',
-                '0;JMP',
-
-                f'({true_label})',
-                '@SP',
-                'A=M',
-                'M=-1',
-                f'@{end_label}',
-                '0;JMP',
-
-                f'({false_label})',
-                '@SP',
-                'A=M',
-                'M=0',
-                f'@{end_label}',
-                '0;JMP',
-
-                f'({end_label})',
-                '@SP',
-                'M=M+1'
+                *self.popStackToD(),
+                *self.popStackToD(d_assignment='D=M-D'),
+                *self.compare('D;JLT'),
+                *self.advanceStackPointer()
             ]
         elif operator == 'gt':
-            (false_label, true_label, end_label)  = [self.make_label() for x in range(3)]
             assembly = [
-                '@SP',
-                'M=M-1',
-                'A=M',
-                'D=M',   #y
-                '@SP',
-                'M=M-1',
-                'A=M',
-                'D=D-M', #y - x
-                f'@{true_label}',
-                'D;JLT',
-
-                f'@{false_label}',
-                '0;JMP',
-
-                f'({true_label})',
-                '@SP',
-                'A=M',
-                'M=-1',
-                f'@{end_label}',
-                '0;JMP',
-
-                f'({false_label})',
-                '@SP',
-                'A=M',
-                'M=0',
-                f'@{end_label}',
-                '0;JMP',
-
-                f'({end_label})',
-                '@SP',
-                'M=M+1'
+                *self.popStackToD(),
+                *self.popStackToD(d_assignment='D=D-M'),
+                *self.compare('D;JLT'),
+                *self.advanceStackPointer()
             ]
-
 
         self.output_file.writelines([x + '\n' for x in assembly])
         self.output_file.flush()
+
 
     def writePushPop(self, command):
         operator, label, operand = command.split()
@@ -251,34 +176,24 @@ class CodeWriter:
                     raise CodeError(f'Unrecognized push pointer combination (command was {command})')
 
                 assembly = [
-                    f'@{address}',
-                    'D=M',
-                    '@SP',
-                    'A=M',
-                    'M=D',
-                    '@SP',
-                    'M=M+1'
+                    *self.assignStackFrom(address),
+                    *self.advanceStackPointer()
                 ]
             elif isStatic:
                 static_label = f'{os.path.basename(self.file_name)}.{operand}'
                 assembly = [
-                    f'@{static_label}',
-                    'D=M',
-                    '@SP',
-                    'A=M',
-                    'M=D',
-                    '@SP',
-                    'M=M+1'
+                    *self.assignStackFrom(static_label),
+                    *self.advanceStackPointer()
                 ]
             elif isConstant:
                 assembly = [
+                    *self.assignStackFrom(operand),
                     f'@{operand}', # put constant in A
                     'D=A',         # D = constant
                     '@SP',         # 0 in A
                     'A=M',         # A == 256
                     'M=D',         # RAM[256] = constant
-                    '@SP',         # A == 256
-                    'M=M+1'        # RAM[0] == 256
+                    *self.advanceStackPointer()
                 ]
             else:
                 get_base = ''
@@ -298,8 +213,7 @@ class CodeWriter:
                     '@SP',
                     'A=M',         # A == 256
                     'M=D',         # RAM[256] = value from stack
-                    '@SP',         # A == 256
-                    'M=M+1'        # RAM[0] == 256
+                    *self.advanceStackPointer()
                 ]
 
         elif (operator == 'pop'):
@@ -326,20 +240,14 @@ class CodeWriter:
                     raise CodeError(f'Unrecognized pop pointer combination (command was {command})')
 
                 assembly = [
-                    '@SP',
-                    'M=M-1',
-                    'A=M',
-                    'D=M',  #D holds the pop'ed value
+                    *self.popStackToD(),
                     f'@{address}',
                     'M=D'
                 ]
             elif isStatic:
                 static_label = f'{os.path.basename(self.file_name)}.{operand}'
                 assembly = [
-                    '@SP',
-                    'M=M-1',
-                    'A=M',
-                    'D=M',  #D holds the pop'ed value
+                    *self.popStackToD(),
                     f'@{static_label}',
                     'M=D'
                 ]
