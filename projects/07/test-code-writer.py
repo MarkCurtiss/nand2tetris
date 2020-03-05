@@ -297,6 +297,76 @@ class CodeWriterTest(unittest.TestCase):
         ])
 
 
+    def test_pop_static(self):
+        self.code_writer.writePushPop('pop static 37')
+        self.assertGeneratedAssemblyEqual([
+            '@SP',
+            'M=M-1',
+            'A=M',
+            'D=M',
+            '@test_output.37',
+            'M=D'
+        ])
+
+    def test_pop_argument(self):
+        self.code_writer.writePushPop('pop argument 800')
+        self.assertGeneratedAssemblyEqual([
+            '@ARG',
+            'D=M',
+            '@800',
+            'D=A+D',
+            '@R13',
+            'M=D',
+            '@SP',
+            'M=M-1',
+            'A=M',
+            'D=M',
+            '@R13',
+            'A=M',
+            'M=D'
+        ])
+
+    def test_pop_temp(self):
+        self.code_writer.writePushPop('pop temp 876')
+        self.assertGeneratedAssemblyEqual([
+            '@5',
+            'D=A',
+            '@876',
+            'D=A+D',
+            '@R13',
+            'M=D',
+            '@SP',
+            'M=M-1',
+            'A=M',
+            'D=M',
+            '@R13',
+            'A=M',
+            'M=D'
+        ])
+
+    def test_pop_pointer_0(self):
+        self.code_writer.writePushPop('pop pointer 0')
+        self.assertGeneratedAssemblyEqual([
+            '@SP',
+            'M=M-1',
+            'A=M',
+            'D=M',
+            '@THIS',
+            'M=D'
+        ])
+
+    def test_pop_pointer_1(self):
+        self.code_writer.writePushPop('pop pointer 1')
+        self.assertGeneratedAssemblyEqual([
+            '@SP',
+            'M=M-1',
+            'A=M',
+            'D=M',
+            '@THAT',
+            'M=D'
+        ])
+
+
     def assertGeneratedAssemblyEqual(self, assembly=[]):
         self.assertAssemblyEqual(self.assembly_filename, assembly)
 

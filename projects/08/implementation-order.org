@@ -1,3 +1,5 @@
+* DONE add tests for pop
+* TODO refactor implementation
 * TODO ProgramFlow/BasicLoop
 * TODO ProgramFlow/Fibonacci
 * TODO FunctionCalls/SimpleFunction
