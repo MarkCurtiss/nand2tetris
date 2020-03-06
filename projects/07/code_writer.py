@@ -142,8 +142,7 @@ class CodeWriter:
                 *self.advanceStackPointer()
             ]
 
-        self.output_file.writelines([x + '\n' for x in assembly])
-        self.output_file.flush()
+        self.write_assembly(assembly)
 
 
     def writePushPop(self, command):
@@ -187,7 +186,6 @@ class CodeWriter:
                 ]
             elif isConstant:
                 assembly = [
-                    *self.assignStackFrom(operand),
                     f'@{operand}', # put constant in A
                     'D=A',         # D = constant
                     '@SP',         # 0 in A
@@ -275,6 +273,14 @@ class CodeWriter:
                     'M=D'
                 ]
 
+        self.write_assembly(assembly)
 
+
+    def writeLabel(self, label):
+        unique_label = f'{os.path.basename(self.file_name)}.{label}'
+        self.write_assembly(['({unique_label})'])
+
+
+    def write_assembly(self, assembly=[]):
         self.output_file.writelines([x + '\n' for x in assembly])
         self.output_file.flush()

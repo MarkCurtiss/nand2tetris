@@ -217,6 +217,19 @@ class CodeWriterTest(unittest.TestCase):
             'M=M+1'
         ])
 
+
+    def test_write_push_pop_ignores_trailing_comments(self):
+        self.code_writer.writePushPop('push constant 37 // this is a comment')
+        self.assertGeneratedAssemblyEqual([
+            '@37',
+            'D=A',
+            '@SP',
+            'A=M',
+            'M=D',
+            '@SP',
+            'M=M+1'
+        ])
+
     def test_push_constant(self):
         self.code_writer.writePushPop('push constant 37')
         self.assertGeneratedAssemblyEqual([
