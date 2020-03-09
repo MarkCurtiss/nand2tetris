@@ -146,7 +146,7 @@ class CodeWriter:
 
 
     def writePushPop(self, command):
-        operator, label, operand = command.split()
+        operator, label, operand, *trailing = command.split()
         assembly = []
 
         if(operator == 'push'):
@@ -278,7 +278,17 @@ class CodeWriter:
 
     def writeLabel(self, label):
         unique_label = f'{os.path.basename(self.file_name)}.{label}'
-        self.write_assembly(['({unique_label})'])
+        self.write_assembly([f'({unique_label})'])
+
+
+    def writeIf(self, label):
+        unique_label = f'{os.path.basename(self.file_name)}.{label}'
+        assembly = [
+            *self.popStackToD(),
+            f'@{unique_label}',
+            'D;JNE'
+        ]
+        self.write_assembly(assembly)
 
 
     def write_assembly(self, assembly=[]):

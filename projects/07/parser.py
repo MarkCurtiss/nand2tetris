@@ -15,7 +15,8 @@ class Command(Enum):
     C_RETURN = 7
     C_CALL = 8
 
-    COMMANDS_WITH_ARGS = [C_PUSH, C_POP, C_FUNCTION, C_CALL]
+
+COMMANDS_WITH_ARGS = [Command.C_PUSH, Command.C_POP, Command.C_FUNCTION, Command.C_CALL, Command.C_LABEL, Command.C_IF]
 
 
 class Parser:
@@ -71,8 +72,8 @@ class Parser:
 
 
     def arg2(self):
-       if commandType() not in Command.COMMANDS_WITH_ARGS:
+       if self.commandType() not in COMMANDS_WITH_ARGS:
            raise ParseError('Do not call arg2 on commands that do not take args')
        else:
-           operands = this.current_command.split()
+           operands = self.current_command.split()
            return operands[1]

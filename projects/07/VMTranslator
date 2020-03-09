@@ -25,6 +25,8 @@ def main():
             writer.writeArithmetic(parser.arg1())
         elif parser.commandType() == Command.C_LABEL:
             writer.writeLabel(parser.arg2())
+        elif parser.commandType() == Command.C_IF:
+            writer.writeIf(parser.arg2())
 
 
 if __name__ == '__main__':
