@@ -27,6 +27,8 @@ def main():
             writer.writeLabel(parser.arg2())
         elif parser.commandType() == Command.C_IF:
             writer.writeIf(parser.arg2())
+        elif parser.commandType() == Command.C_GOTO:
+            writer.writeGoto(parser.arg2())
 
 
 if __name__ == '__main__':

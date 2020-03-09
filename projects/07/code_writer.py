@@ -291,6 +291,16 @@ class CodeWriter:
         self.write_assembly(assembly)
 
 
+    def writeGoto(self, label):
+         unique_label = f'{os.path.basename(self.file_name)}.{label}'
+        assembly = [
+            f'@{unique_label}',
+            '0;JMP'
+        ]
+
+        self.write_assembly(assembly)
+
+
     def write_assembly(self, assembly=[]):
         self.output_file.writelines([x + '\n' for x in assembly])
         self.output_file.flush()
