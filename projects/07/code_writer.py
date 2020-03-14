@@ -18,6 +18,7 @@ class CodeWriter:
         self.label_count = 0
         self.setFileName(output)
 
+
     def Close(self):
         self.output_file.close()
 
@@ -25,10 +26,15 @@ class CodeWriter:
     def __del__(self):
         self.Close()
 
-    def make_label(self):
+
+    def make_incrementing_label(self):
         label = f'{os.path.basename(self.file_name)}.{self.label_count}'
         self.label_count += 1
         return label
+
+
+    def uniquify_label(self, label):
+        return f'{os.path.basename(self.file_name)}.{label}'
 
 
     def setFileName(self, output):
@@ -45,7 +51,7 @@ class CodeWriter:
 
 
     def compare(self, condition_for_jmp):
-        (false_label, true_label, end_label)  = [self.make_label() for x in range(3)]
+        (false_label, true_label, end_label)  = [self.make_incrementing_label() for x in range(3)]
         return [
             f'@{true_label}',
             f'{condition_for_jmp}',
@@ -277,12 +283,12 @@ class CodeWriter:
 
 
     def writeLabel(self, label):
-        unique_label = f'{os.path.basename(self.file_name)}.{label}'
+        unique_label = uniquify_label(label)
         self.write_assembly([f'({unique_label})'])
 
 
     def writeIf(self, label):
-        unique_label = f'{os.path.basename(self.file_name)}.{label}'
+        unique_label = uniquify_label(label)
         assembly = [
             *self.popStackToD(),
             f'@{unique_label}',
@@ -292,12 +298,28 @@ class CodeWriter:
 
 
     def writeGoto(self, label):
-         unique_label = f'{os.path.basename(self.file_name)}.{label}'
+        unique_label = uniquify_label(label)
         assembly = [
             f'@{unique_label}',
             '0;JMP'
         ]
 
+        self.write_assembly(assembly)
+
+    # pg 163
+    def writeFunction(self, command):
+        operator, function_name, num_args, *trailing = command.split()
+        unique_function_name = uniquify_label(function_name)
+        arg_pushes = []
+        assembly = [
+            f'@({unique_function_name}',
+
+        ]
+        self.write_assembly(assembly)
+
+
+    def writeReturn(self):
+        assembly = []
         self.write_assembly(assembly)
 
 

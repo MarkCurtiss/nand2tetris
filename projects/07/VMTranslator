@@ -29,6 +29,10 @@ def main():
             writer.writeIf(parser.arg2())
         elif parser.commandType() == Command.C_GOTO:
             writer.writeGoto(parser.arg2())
+        elif parser.commandType() == Command.C_RETURN:
+            writer.writeReturn()
+        elif parser.commandType() == Command.C_FUNCTION:
+            writer.writeFunction(current_command)
 
 
 if __name__ == '__main__':

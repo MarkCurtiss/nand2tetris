@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class ParseError(Exception):
     pass
 
@@ -16,7 +17,10 @@ class Command(Enum):
     C_CALL = 8
 
 
-COMMANDS_WITH_ARGS = [Command.C_PUSH, Command.C_POP, Command.C_FUNCTION, Command.C_CALL, Command.C_LABEL, Command.C_IF, Command.C_GOTO]
+COMMANDS_WITH_ARGS = [
+        Command.C_PUSH, Command.C_POP, Command.C_FUNCTION, Command.C_CALL,
+        Command.C_LABEL, Command.C_IF, Command.C_GOTO
+]
 
 
 class Parser:
