@@ -283,12 +283,12 @@ class CodeWriter:
 
 
     def writeLabel(self, label):
-        unique_label = uniquify_label(label)
+        unique_label = self.uniquify_label(label)
         self.write_assembly([f'({unique_label})'])
 
 
     def writeIf(self, label):
-        unique_label = uniquify_label(label)
+        unique_label = self.uniquify_label(label)
         assembly = [
             *self.popStackToD(),
             f'@{unique_label}',
@@ -298,7 +298,7 @@ class CodeWriter:
 
 
     def writeGoto(self, label):
-        unique_label = uniquify_label(label)
+        unique_label = self.uniquify_label(label)
         assembly = [
             f'@{unique_label}',
             '0;JMP'
@@ -306,20 +306,87 @@ class CodeWriter:
 
         self.write_assembly(assembly)
 
-    # pg 163
+
     def writeFunction(self, command):
         operator, function_name, num_args, *trailing = command.split()
-        unique_function_name = uniquify_label(function_name)
+        unique_function_name = self.uniquify_label(function_name)
         arg_pushes = []
         assembly = [
-            f'@({unique_function_name}',
-
+            f'({unique_function_name})',
         ]
+
+        for var in range(int(num_args)):
+            assembly += [
+                '@LCL', #A = 1
+                'D=M',  #D = 305
+                'A=D',  #A = 305
+                'M=0',  #RAM[305]=0
+                *self.advanceStackPointer()
+            ]
+
+
         self.write_assembly(assembly)
 
 
     def writeReturn(self):
-        assembly = []
+        # FRAME = LCL  // FRAME is a temporary variable
+        # RET = *(FRAME-5) // put the return-address in a temp var
+        # *ARG = pop()   // reposition the value for the caller
+        # SP = ARG+1    // restore SP of the caller
+        # THAT = *(FRAME-1)  // restore THAT of the caller
+        # THIS = *(FRAME-2)   // restore THIS of the caller
+        # ARG = *(FRAME-3)  // restore ARG of the caller
+        # LCL = *(FRAME-4)  //  restore LCL of the caller
+        # goto RET   // goto return-address (in the caller's code)
+        assembly = [
+            '@LCL',
+            'D=M',
+            '@R13',
+            'M=D',      # FRAME=LCL
+            'D=D-1',
+            'D=D-1',
+            'D=D-1',
+            'D=D-1',
+            'D=D-1',
+            'A=D',
+            'D=M',      # D = *(FRAME-5)
+            '@R14',
+            'M=D',     # put the return-address in a temp var
+            *self.popStackToD(),
+            '@ARG',
+            'M=D',   #*ARG = pop() ?
+            '@ARG',
+            'D=A+1',
+            'D=M',   # D == ARG+1
+            '@SP',
+            'M=D',   # *SP == ARG+1
+            '@R13',
+            'M=M-1', # FRAME-1
+            'D=M',
+            '@THAT',
+            'M=D',# THAT = *(FRAME-1)  // restore THAT of the caller
+            '@R13',
+            'M=M-1',
+            'D=M',
+            '@THIS',
+            'M=D',         # THIS = *(FRAME-2)   // restore THIS of the caller
+            '@R13',
+            'M=M-1',
+            'D=M',
+            '@ARG',
+            'M=D',         # ARG = *(FRAME-3)  // restore ARG of the caller
+            '@R13',
+            'M=M-1',
+            'D=M',
+            '@LCL',
+            'M=D',   # LCL = *(FRAME-4)  //  restore LCL of the caller
+            '@R14',
+            'A=M',
+            '0;JMP' # goto RET   // goto return-address (in the caller's code)
+        ]
+
+        # line 95
+
         self.write_assembly(assembly)
 
 
