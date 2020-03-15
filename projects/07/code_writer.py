@@ -331,6 +331,8 @@ class CodeWriter:
     def writeReturn(self):
         # FRAME = LCL  // FRAME is a temporary variable
         # RET = *(FRAME-5) // put the return-address in a temp var
+        # i think this means the VM code returns to 312 'cuz LCL holds the value 317
+        # change arg to hold the value that comes off the stack
         # *ARG = pop()   // reposition the value for the caller
         # SP = ARG+1    // restore SP of the caller
         # THAT = *(FRAME-1)  // restore THAT of the caller
@@ -350,33 +352,38 @@ class CodeWriter:
             'D=D-1',
             'A=D',
             'D=M',      # D = *(FRAME-5)
+            '//put the return-address in a temp var',
             '@R14',
             'M=D',     # put the return-address in a temp var
             *self.popStackToD(),
             '@ARG',
-            'M=D',   #*ARG = pop() ?
+            'A=M',
+            'M=D',   #*ARG = pop()
             '@ARG',
-            'D=A+1',
-            'D=M',   # D == ARG+1
+            'D=M+1',
             '@SP',
-            'M=D',   # *SP == ARG+1
+            'M=D',   # SP == ARG+1
             '@R13',
             'M=M-1', # FRAME-1
+            'A=M',
             'D=M',
             '@THAT',
             'M=D',# THAT = *(FRAME-1)  // restore THAT of the caller
             '@R13',
             'M=M-1',
+            'A=M',
             'D=M',
             '@THIS',
             'M=D',         # THIS = *(FRAME-2)   // restore THIS of the caller
             '@R13',
             'M=M-1',
+            'A=M',
             'D=M',
             '@ARG',
             'M=D',         # ARG = *(FRAME-3)  // restore ARG of the caller
             '@R13',
             'M=M-1',
+            'A=M',
             'D=M',
             '@LCL',
             'M=D',   # LCL = *(FRAME-4)  //  restore LCL of the caller
@@ -384,8 +391,6 @@ class CodeWriter:
             'A=M',
             '0;JMP' # goto RET   // goto return-address (in the caller's code)
         ]
-
-        # line 95
 
         self.write_assembly(assembly)
 
