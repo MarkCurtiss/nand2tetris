@@ -352,7 +352,6 @@ class CodeWriter:
             'D=D-1',
             'A=D',
             'D=M',      # D = *(FRAME-5)
-            '//put the return-address in a temp var',
             '@R14',
             'M=D',     # put the return-address in a temp var
             *self.popStackToD(),

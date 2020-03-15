@@ -381,6 +381,81 @@ class CodeWriterTest(unittest.TestCase):
         ])
 
 
+    def test_write_function(self):
+        self.code_writer.writeFunction('function SimpleFunction.test 2')
+        self.assertGeneratedAssemblyEqual([
+            '(test_output.SimpleFunction.test)',
+            '@LCL',
+            'D=M',
+            'A=D',
+            'M=0',
+            '@SP',
+            'M=M+1',
+            '@LCL',
+            'D=M',
+            'A=D',
+            'M=0',
+            '@SP',
+            'M=M+1'
+        ])
+
+    def test_write_return(self):
+        self.code_writer.writeReturn()
+        self.assertGeneratedAssemblyEqual([
+            '@LCL',
+            'D=M',
+            '@R13',
+            'M=D',
+            'D=D-1',
+            'D=D-1',
+            'D=D-1',
+            'D=D-1',
+            'D=D-1',
+            'A=D',
+            'D=M',
+            '@R14',
+            'M=D',
+            '@SP',
+            'M=M-1',
+            'A=M',
+            'D=M',
+            '@ARG',
+            'A=M',
+            'M=D',
+            '@ARG',
+            'D=M+1',
+            '@SP',
+            'M=D',
+            '@R13',
+            'M=M-1',
+            'A=M',
+            'D=M',
+            '@THAT',
+            'M=D',
+            '@R13',
+            'M=M-1',
+            'A=M',
+            'D=M',
+            '@THIS',
+            'M=D',
+            '@R13',
+            'M=M-1',
+            'A=M',
+            'D=M',
+            '@ARG',
+            'M=D',
+            '@R13',
+            'M=M-1',
+            'A=M',
+            'D=M',
+            '@LCL',
+            'M=D',
+            '@R14',
+            'A=M',
+            '0;JMP'
+        ])
+
+
     def assertGeneratedAssemblyEqual(self, assembly=[]):
         self.assertAssemblyEqual(self.assembly_filename, assembly)
 
