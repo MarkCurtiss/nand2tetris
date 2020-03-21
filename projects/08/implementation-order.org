@@ -2,7 +2,7 @@
 * DONE refactor implementation
 * DONE ProgramFlow/BasicLoop
 * DONE ProgramFlow/Fibonacci
-* TODO FunctionCalls/SimpleFunction
+* DONE FunctionCalls/SimpleFunction
 * TODO FunctionCalls/NestedCall
   (refer https://www.nand2tetris.org/copy-of-nestedcall)
 * TODO FunctionCalls/FibonacciElement

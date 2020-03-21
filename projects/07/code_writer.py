@@ -394,6 +394,64 @@ class CodeWriter:
         self.write_assembly(assembly)
 
 
+    def writeBootstrap(self):
+        self.write_assembly([
+            '@256',
+            'D=A',
+            '@SP',
+            'M=D'
+        ])
+
+
+    def writeCall(self, command):
+        operator, function_name, num_args, *trailing = command.split()
+
+        return_label = self.uniquify_label(function_name + '.return')
+        assembly = []
+
+        assembly += [
+            f'@{return_label}', # A=Address of label
+            'D=A',         # D = Address of label
+            '@SP',         # 0 in A
+            'A=M',         # A == 256
+            'M=D',         # RAM[256] = constant
+            *self.advanceStackPointer()
+        ]
+
+        for label in ['LCL', 'ARG', 'THIS', 'THAT']:
+            assembly += [
+                f'@{label}', # A=Address of label
+                'D=M',         # D = where that label is pointing
+                '@SP',         # 0 in A
+                'A=M',         # A == 256
+                'M=D',         # RAM[256] = constant
+                *self.advanceStackPointer()
+            ]
+
+        # ARG = SP - n - 5
+        assembly += ['@SP', 'D=M']
+        assembly += ['D=D-1'] * (int(num_args)+5)
+        assembly += [
+            '@ARG',
+            'M=D'
+        ]
+        # LCL = SP
+        assembly += [
+            '@SP',
+            'D=M',
+            '@LCL',
+            'M=D'
+        ]
+        # goto f
+        assembly += [
+            f'@{self.uniquify_label(function_name)}',
+            '0;JMP',
+            f'({return_label})'
+        ]
+
+        self.write_assembly(assembly)
+
+
     def write_assembly(self, assembly=[]):
         self.output_file.writelines([x + '\n' for x in assembly])
         self.output_file.flush()

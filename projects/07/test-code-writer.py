@@ -456,6 +456,22 @@ class CodeWriterTest(unittest.TestCase):
         ])
 
 
+    def test_write_call(self):
+        self.code_writer.writeCall('call Sys.init 0')
+        self.assertGeneratedAssemblyEqual([
+        ])
+
+
+    def test_write_bootstrap(self):
+        self.code_writer.writeBootstrap()
+        self.assertGeneratedAssemblyEqual([
+            '@256',
+            'D=A',
+            '@SP',
+            'M=D'
+        ])
+
+
     def assertGeneratedAssemblyEqual(self, assembly=[]):
         self.assertAssemblyEqual(self.assembly_filename, assembly)
 
