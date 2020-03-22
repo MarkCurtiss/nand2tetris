@@ -13,10 +13,21 @@ function log() {
 
 # this needs to know if it is a directory for a filename :(
 VM_FILENAME=$1
-TST_FILENAME=$(dirname $VM_FILENAME)/$(basename $VM_FILENAME .vm).tst
-CMP_FILENAME=$(dirname $VM_FILENAME)/$(basename $VM_FILENAME .vm).cmp
-OUT_FILENAME=$(dirname $VM_FILENAME)/$(basename $VM_FILENAME .vm).out
-ASM_FILENAME=$(dirname $VM_FILENAME)/$(basename $VM_FILENAME .vm).asm
+
+if [[ -d $VM_FILENAME ]]; then
+    log "$VM_FILENAME is a directory"
+    TST_FILENAME=$(dirname $VM_FILENAME)/$(basename $VM_FILENAME)/$(basename $VM_FILENAME .vm).tst
+    CMP_FILENAME=$(dirname $VM_FILENAME)/$(basename $VM_FILENAME)/$(basename $VM_FILENAME .vm).cmp
+    OUT_FILENAME=$(dirname $VM_FILENAME)/$(basename $VM_FILENAME)/$(basename $VM_FILENAME .vm).out
+    ASM_FILENAME=$(dirname $VM_FILENAME)/$(basename $VM_FILENAME)/$(basename $VM_FILENAME .vm).asm
+else
+    log "$VM_FILENAME is a file"
+    TST_FILENAME=$(dirname $VM_FILENAME)/$(basename $VM_FILENAME .vm).tst
+    CMP_FILENAME=$(dirname $VM_FILENAME)/$(basename $VM_FILENAME .vm).cmp
+    OUT_FILENAME=$(dirname $VM_FILENAME)/$(basename $VM_FILENAME .vm).out
+    ASM_FILENAME=$(dirname $VM_FILENAME)/$(basename $VM_FILENAME .vm).asm
+fi
+
 
 log "Translating $VM_FILENAME into $ASM_FILENAME"
 ./VMTranslator $VM_FILENAME
