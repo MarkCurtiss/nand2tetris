@@ -4,21 +4,32 @@ from parser import Parser, Command
 from code_writer import CodeWriter
 
 from glob import glob
+import logging
 import sys
 import os
 
-
+logging.basicConfig(
+    format='%(asctime)s [%(module)s] %(levelname)s:%(message)s',
+    level=logging.DEBUG,
+    datefmt='%Y-%m-%d %T'
+)
+LOGGER = logging.getLogger('VMTranslator')
 filename = sys.argv[1]
 
 
 def output_filename(input_filename):
     path = os.path.dirname(input_filename)
-    basename = os.path.basename(input_filename).split('.')[0]
+
+    if os.path.isfile(input_filename):
+        basename = os.path.basename(input_filename).split('.')[0]
+    elif os.path.isdir(input_filename):
+        basename = os.path.basename(path)
+
     return f'{path}/{basename}.asm'
 
 
 def parse_file(filename, output_filename):
-    print(f'Hello I read in file {filename} and I am writing to {output_filename}')
+    LOGGER.info(f'Hello I read in file {filename} and I am writing to {output_filename}')
     parser = Parser(filename)
     writer = CodeWriter(output_filename)
 
@@ -47,15 +58,17 @@ def main():
         vm_files = glob(filename + "/*.vm")
         bootstrap = []
         outfile = output_filename(filename)
+        LOGGER.info(f'I am reading directory {filename} and writing to {outfile}')
+
 
         if "Sys.vm" in map(lambda x: os.path.basename(x), vm_files):
-            writer = CodeWriter(output_filename)
+            writer = CodeWriter(outfile)
             writer.writeBootstrap()
-            writer.writeCall('Sys.init', '0')
+            writer.writeCall('call Sys.init 0')
 
 
         for f in vm_files:
-            parse_file(f, output_filename(filename))
+            parse_file(f, outfile)
 
 
 if __name__ == '__main__':
