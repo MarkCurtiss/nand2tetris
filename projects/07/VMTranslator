@@ -28,10 +28,10 @@ def output_filename(input_filename):
     return f'{path}/{basename}.asm'
 
 
-def parse_file(filename, output_filename):
-    LOGGER.info(f'Hello I read in file {filename} and I am writing to {output_filename}')
+def parse_file(filename, output_filename, append=False):
+    LOGGER.info(f'Hello I read in file {filename} and I am writing to {output_filename} (append={append})')
     parser = Parser(filename)
-    writer = CodeWriter(output_filename)
+    writer = CodeWriter(output_filename, append=append)
 
     while (parser.has_more_commands()):
         current_command = parser.advance()
@@ -49,6 +49,8 @@ def parse_file(filename, output_filename):
             writer.writeReturn()
         elif parser.commandType() == Command.C_FUNCTION:
             writer.writeFunction(current_command)
+        elif parser.commandType() == Command.C_CALL:
+            writer.writeCall(current_command)
 
 
 def main():
@@ -62,13 +64,13 @@ def main():
 
 
         if "Sys.vm" in map(lambda x: os.path.basename(x), vm_files):
+            LOGGER.info(f'Writing bootstrap code to {outfile}')
             writer = CodeWriter(outfile)
             writer.writeBootstrap()
             writer.writeCall('call Sys.init 0')
 
-
         for f in vm_files:
-            parse_file(f, outfile)
+            parse_file(f, outfile, append=True)
 
 
 if __name__ == '__main__':

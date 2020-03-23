@@ -1,7 +1,18 @@
+import logging
 import os
+
+
+logging.basicConfig(
+    format='%(asctime)s [%(module)s] %(levelname)s:%(message)s',
+    level=logging.DEBUG,
+    datefmt='%Y-%m-%d %T'
+)
+LOGGER = logging.getLogger('code_writer')
+
 
 class CodeError(Exception):
     pass
+
 
 offset_by_label = {
     'local': 'LCL',
@@ -13,10 +24,10 @@ offset_by_label = {
 
 
 class CodeWriter:
-    def __init__(self, output):
+    def __init__(self, output, append=False):
         self.file_name = None
         self.label_count = 0
-        self.setFileName(output)
+        self.setFileName(output, append)
 
 
     def Close(self):
@@ -37,9 +48,13 @@ class CodeWriter:
         return f'{os.path.basename(self.file_name)}.{label}'
 
 
-    def setFileName(self, output):
+    def setFileName(self, output, append=False):
         self.file_name = output
-        self.output_file = open(self.file_name, 'w')
+        if append:
+            mode = 'a'
+        else:
+            mode = 'w'
+        self.output_file = open(self.file_name, mode)
 
 
     def advanceStackPointer(self):
@@ -317,9 +332,9 @@ class CodeWriter:
 
         for var in range(int(num_args)):
             assembly += [
-                '@LCL', #A = 1
-                'D=M',  #D = 305
-                'A=D',  #A = 305
+                '@SP', #A = 1
+                'D=M',
+                'A=D',
                 'M=0',  #RAM[305]=0
                 *self.advanceStackPointer()
             ]
@@ -415,7 +430,8 @@ class CodeWriter:
             '@SP',         # 0 in A
             'A=M',         # A == 256
             'M=D',         # RAM[256] = constant
-            *self.advanceStackPointer()
+            *self.advanceStackPointer(),
+
         ]
 
         for label in ['LCL', 'ARG', 'THIS', 'THAT']:
@@ -446,6 +462,7 @@ class CodeWriter:
         assembly += [
             f'@{self.uniquify_label(function_name)}',
             '0;JMP',
+            '@9999',
             f'({return_label})'
         ]
 

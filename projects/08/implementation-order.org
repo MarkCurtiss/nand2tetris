@@ -3,7 +3,7 @@
 * DONE ProgramFlow/BasicLoop
 * DONE ProgramFlow/Fibonacci
 * DONE FunctionCalls/SimpleFunction
-* TODO FunctionCalls/NestedCall
+* DONE FunctionCalls/NestedCall
   (refer https://www.nand2tetris.org/copy-of-nestedcall)
 * TODO FunctionCalls/FibonacciElement
 * TODO FunctionCalls/StaticsTest

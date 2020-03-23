@@ -1,4 +1,13 @@
+import logging
 from enum import Enum
+
+
+logging.basicConfig(
+    format='%(asctime)s [%(module)s] %(levelname)s:%(message)s',
+    level=logging.DEBUG,
+    datefmt='%Y-%m-%d %T'
+)
+LOGGER = logging.getLogger('parser')
 
 
 class ParseError(Exception):

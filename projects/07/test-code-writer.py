@@ -385,19 +385,20 @@ class CodeWriterTest(unittest.TestCase):
         self.code_writer.writeFunction('function SimpleFunction.test 2')
         self.assertGeneratedAssemblyEqual([
             '(test_output.SimpleFunction.test)',
-            '@LCL',
+            '@SP',
             'D=M',
             'A=D',
             'M=0',
             '@SP',
             'M=M+1',
-            '@LCL',
+            '@SP',
             'D=M',
             'A=D',
             'M=0',
             '@SP',
             'M=M+1'
         ])
+
 
     def test_write_return(self):
         self.code_writer.writeReturn()
@@ -459,6 +460,58 @@ class CodeWriterTest(unittest.TestCase):
     def test_write_call(self):
         self.code_writer.writeCall('call Sys.init 0')
         self.assertGeneratedAssemblyEqual([
+            '@test_output.Sys.init.return',
+            'D=A',
+            '@SP',
+            'A=M',
+            'M=D',
+            '@SP',
+            'M=M+1',
+            '@LCL',
+            'D=M',
+            '@SP',
+            'A=M',
+            'M=D',
+            '@SP',
+            'M=M+1',
+            '@ARG',
+            'D=M',
+            '@SP',
+            'A=M',
+            'M=D',
+            '@SP',
+            'M=M+1',
+            '@THIS',
+            'D=M',
+            '@SP',
+            'A=M',
+            'M=D',
+            '@SP',
+            'M=M+1',
+            '@THAT',
+            'D=M',
+            '@SP',
+            'A=M',
+            'M=D',
+            '@SP',
+            'M=M+1',
+            '@SP',
+            'D=M',
+            'D=D-1',
+            'D=D-1',
+            'D=D-1',
+            'D=D-1',
+            'D=D-1',
+            '@ARG',
+            'M=D',
+            '@SP',
+            'D=M',
+            '@LCL',
+            'M=D',
+            '@test_output.Sys.init',
+            '0;JMP',
+            '@9999',
+            '(test_output.Sys.init.return)'
         ])
 
 
