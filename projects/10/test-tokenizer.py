@@ -1,13 +1,35 @@
 import unittest
+import xml.etree.ElementTree as ET
 import os
 from tempfile import TemporaryDirectory
 
+
 from tokenizer import Tokenizer
+
 
 class TokenizerTest(unittest.TestCase):
     def setUp(self):
         self.tokenizer = Tokenizer()
         self.maxDiff = None
+
+
+    def reformat_xml_to_standardize_whitespace(self, xml):
+        tree = ET.fromstring(''.join(xml.split()))
+        self.tokenizer.prettify_elements(tree)
+        return ET.tostring(tree, encoding='unicode')
+
+
+    def assert_xml_equal(self, expected_xml, actual_xml, debug_output=False):
+        if debug_output:
+            print('expected_xml:')
+            print(self.reformat_xml_to_standardize_whitespace(expected_xml))
+            print('actual_xml:')
+            print(self.reformat_xml_to_standardize_whitespace(actual_xml))
+
+        self.assertEqual(
+            self.reformat_xml_to_standardize_whitespace(expected_xml),
+            self.reformat_xml_to_standardize_whitespace(actual_xml)
+        )
 
 
     def test_if(self):
@@ -18,9 +40,9 @@ if (x < 0) {
 """
         )
 
-        self.assertMultiLineEqual(
-            (output),
-            ''.join("""<tokens>
+        self.assert_xml_equal(
+            output,
+            """<tokens>
     <keyword> if </keyword>
     <symbol> ( </symbol>
     <identifier> x </identifier>
@@ -34,5 +56,5 @@ if (x < 0) {
     <stringConstant> negative </stringConstant>
     <symbol> ; </symbol>
     <symbol> } </symbol>
-</tokens>""".split())
+</tokens>"""
         )

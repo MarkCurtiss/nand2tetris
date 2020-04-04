@@ -2,6 +2,7 @@
 
 import xml.etree.ElementTree as ET
 
+
 KEYWORDS = [
     'class', 'constructor', 'function',
     'method', 'field', 'static', 'var',
@@ -21,8 +22,10 @@ class Tokenizer:
         current_token = ''
         startedID = False
         startedString = False
+        startedComment = False
 
-        for x in ' '.join(input.split()):
+        for x in input:
+            print(f'now examining: {x}')
             if x in SYMBOLS:
                 if startedID:
                     if current_token.isdigit():
@@ -43,9 +46,11 @@ class Tokenizer:
                 startedID = True
                 current_token += x
             elif x.isdigit():
+                print('is a digit, starting an identifier')
                 startedID = True
                 current_token += x
             elif x == '"' and not startedString:
+                print('is a quote, starting string')
                 startedString = True
             elif x == '"' and startedString:
                 print('STRINGCONSTANT')
@@ -65,9 +70,27 @@ class Tokenizer:
                     print('IDENTIFIER')
                     ET.SubElement(tokens, 'identifier').text = current_token
                 current_token = ''
+            elif x == '\n':
+                print('is a newline')
             else:
                 print(f'adding onto current token')
                 current_token += x
 
+        self.prettify_elements(tokens)
+        return ET.tostring(tokens, encoding='unicode')
 
-        return ET.tostring(tokens, encoding="unicode")
+
+    def prettify_elements(self, elem, level=0):
+        i = "\n" + level*"  "
+        if len(elem):
+            if not elem.text or not elem.text.strip():
+                elem.text = i + "  "
+            if not elem.tail or not elem.tail.strip():
+                elem.tail = i
+            for elem in elem:
+                self.prettify_elements(elem, level+1)
+            if not elem.tail or not elem.tail.strip():
+                elem.tail = i
+        else:
+            if level and (not elem.tail or not elem.tail.strip()):
+                elem.tail = i
