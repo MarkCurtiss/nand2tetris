@@ -19,7 +19,7 @@ class TokenizerTest(unittest.TestCase):
         return ET.tostring(tree, encoding='unicode')
 
 
-    def assert_xml_equal(self, expected_xml, actual_xml, debug_output=False):
+    def assert_xml_equal(self, actual_xml, expected_xml, debug_output=False):
         if debug_output:
             print('expected_xml:')
             print(self.reformat_xml_to_standardize_whitespace(expected_xml))
@@ -58,3 +58,18 @@ if (x < 0) {
     <symbol> } </symbol>
 </tokens>"""
         )
+
+
+    def test_comments(self):
+        output = self.tokenizer.tokenize("""
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/10/ArrayTest/Main.jack
+
+// (identical to projects/09/Average/Main.jack)
+
+/** Computes the average of a sequence of integers. */
+""")
+
+        self.assert_xml_equal(output, '<tokens></tokens>', True)

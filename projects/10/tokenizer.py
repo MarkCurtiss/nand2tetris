@@ -18,16 +18,47 @@ class Tokenizer:
     def tokenize(self, input):
         tokens = ET.Element('tokens')
 
+        print('BEGIN PARSING')
         print(f'here is our input {input}')
         current_token = ''
         startedID = False
         startedString = False
-        startedComment = False
+        startedSingleLineComment = False
+        startedMultilineComment = False
+        peekahead = None
+        peekbehind = None
 
-        for x in input:
-            print(f'now examining: {x}')
-            if x in SYMBOLS:
-                if startedID:
+        for idx, x in enumerate(input):
+            if idx > 1:
+                peekbehind = input[idx-1]
+            if idx == len(input) - 1:
+                print('we are at the last element - no peeking')
+                peekahead = None
+            else:
+                peekahead = input[idx+1]
+
+            print(f'x: {x}, peekahead: {peekahead},  peekbehind: {peekbehind}')
+
+            if x == '\n':
+                print('is a newline')
+                if startedSingleLineComment:
+                    print('ending comment')
+                    startedSingleLineComment = False
+            elif x == '/' and peekbehind == '*' and startedMultilineComment:
+                    print('our long national nightmare is over; ending multiline comment')
+                    startedMultilineComment = False
+            elif startedSingleLineComment or startedMultilineComment:
+                print('still in a comment - ignoring input')
+            elif x in SYMBOLS:
+                if x == '/' and peekahead == '/':
+                    print('starting comment and ignoring all input until we see a newline')
+                    startedSingleLineComment = True
+                    continue
+                if x == '/' and peekahead == '*':
+                    print('starting multiline comment and ignoring all input until we see the end')
+                    startedMultilineComment = True
+                    continue
+                elif startedID:
                     if current_token.isdigit():
                         print('INTEGERCONSTANT')
                         ET.SubElement(tokens, 'integerConstant').text = current_token
@@ -39,6 +70,7 @@ class Tokenizer:
                     print('STRINGCONSTANT')
                     ET.SubElement(tokens, 'stringConstant').text = current_token
                     startedString = False
+
                 print('SYMBOL')
                 ET.SubElement(tokens, 'symbol').text = x
                 current_token = ''
@@ -70,8 +102,7 @@ class Tokenizer:
                     print('IDENTIFIER')
                     ET.SubElement(tokens, 'identifier').text = current_token
                 current_token = ''
-            elif x == '\n':
-                print('is a newline')
+
             else:
                 print(f'adding onto current token')
                 current_token += x
