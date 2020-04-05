@@ -1,6 +1,16 @@
 #!/usr/local/bin/python3
 
+import sys
 import xml.etree.ElementTree as ET
+import logging
+
+logging.basicConfig(
+    format='%(asctime)s [%(module)s] %(levelname)s:%(message)s',
+    level=logging.DEBUG,
+    datefmt='%Y-%m-%d %T'
+)
+LOGGER = logging.getLogger('tokenizer')
+LOGGER.setLevel(logging.INFO)
 
 
 KEYWORDS = [
@@ -17,22 +27,22 @@ SYMBOLS = '{ } ( ) [ ] . - , ; + - * / & | < > = -'.split()
 class Tokenizer:
     def tokenize(self, input):
         tokens = ET.Element('tokens')
-        print('BEGIN PARSING')
-        print(f'here is our input {input}')
+        LOGGER.debug('BEGIN PARSING')
+        LOGGER.debug(f'here is our input {input}')
 
         index = 0
         peekahead = None
 
         while (index < len(input)):
             if index == len(input) - 1:
-                print('we are at the last element - no peeking')
+                LOGGER.debug('we are at the last element - no peeking')
                 peekahead = None
             else:
                 peekahead = input[index+1]
 
             x = input[index]
 
-            print(f'index: {index}, x: {x}, peekahead: {peekahead}')
+            LOGGER.debug(f'index: {index}, x: {x}, peekahead: {peekahead}')
 
             if x == '/' and peekahead == '/':
                 index = self.tokenize_single_line_comment(tokens, index+1, input)
@@ -45,7 +55,7 @@ class Tokenizer:
             elif x == '"':
                 index = self.tokenize_string_constant(tokens, index+1, input)
             elif x in SYMBOLS:
-                print('SYMBOL')
+                LOGGER.debug('SYMBOL')
                 ET.SubElement(tokens, 'symbol').text = x
                 index += 1
             else:
@@ -58,7 +68,7 @@ class Tokenizer:
     def tokenize_single_line_comment(self, tokens, index, input):
         while (index < len(input)):
             if input[index] == '\n':
-                print('reached the end of single-line comment')
+                LOGGER.debug('reached the end of single-line comment')
                 return index+1
 
             index += 1
@@ -69,7 +79,7 @@ class Tokenizer:
     def tokenize_multi_line_comment(self, tokens, index, input):
         while (index < len(input)):
             if input[index-1] == '*' and input[index] == '/':
-                print('reached the end of mult-line comment')
+                LOGGER.debug('reached the end of mult-line comment')
                 return index+1
 
             index += 1
@@ -83,11 +93,11 @@ class Tokenizer:
         while (index < len(input)):
             if not input[index].isalnum():
                 if current_token in KEYWORDS:
-                    print('KEYWORD')
+                    LOGGER.debug('KEYWORD')
                     ET.SubElement(tokens, 'keyword').text = current_token
                     return index
                 else:
-                    print('IDENTIFIER')
+                    LOGGER.debug('IDENTIFIER')
                     ET.SubElement(tokens, 'identifier').text = current_token
                     return index
 
@@ -102,7 +112,7 @@ class Tokenizer:
 
         while (index < len(input)):
             if not input[index].isdigit():
-                print('INTEGERCONSTANT')
+                LOGGER.debug('INTEGERCONSTANT')
                 ET.SubElement(tokens, 'integerConstant').text = current_token
                 return index
 
@@ -117,7 +127,7 @@ class Tokenizer:
 
         while (index < len(input)):
             if input[index] == '"':
-                print('STRINGCONSTANT')
+                LOGGER.debug('STRINGCONSTANT')
                 ET.SubElement(tokens, 'stringConstant').text = current_token
                 return index+1
 
@@ -239,3 +249,15 @@ class Tokenizer:
         else:
             if level and (not elem.tail or not elem.tail.strip()):
                 elem.tail = i
+
+
+if __name__ == '__main__':
+    filename = sys.argv[1]
+
+    tokenizer = Tokenizer()
+    LOGGER.debug(f'now reading file: {filename}')
+    # to use against a Jack file
+    # diff -w <(./tokenizer.py Square/Square.jack ) <(cat Square/SquareT.xml)
+    with open(filename, 'r') as f:
+        output = tokenizer.tokenize(''.join(f.readlines()))
+        print(f'{output}')

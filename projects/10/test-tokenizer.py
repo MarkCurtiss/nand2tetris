@@ -261,3 +261,77 @@ class Main {
 <symbol> } </symbol>
 </tokens>
             """)
+
+    def test_class(self):
+        output = self.tokenizer.tokenize("""
+class Square {
+
+   field int x, y; // screen location of the square's top-left corner
+   field int size; // length of this square, in pixels
+
+   /** Constructs a new square with a given location and size. */
+   constructor Square new(int Ax, int Ay, int Asize) {
+      let x = Ax;
+      let y = Ay;
+      let size = Asize;
+      do draw();
+      return this;
+   }""")
+
+        self.assert_xml_equal(
+            output,
+            """
+<tokens>
+<keyword> class </keyword>
+<identifier> Square </identifier>
+<symbol> { </symbol>
+<keyword> field </keyword>
+<keyword> int </keyword>
+<identifier> x </identifier>
+<symbol> , </symbol>
+<identifier> y </identifier>
+<symbol> ; </symbol>
+<keyword> field </keyword>
+<keyword> int </keyword>
+<identifier> size </identifier>
+<symbol> ; </symbol>
+<keyword> constructor </keyword>
+<identifier> Square </identifier>
+<identifier> new </identifier>
+<symbol> ( </symbol>
+<keyword> int </keyword>
+<identifier> Ax </identifier>
+<symbol> , </symbol>
+<keyword> int </keyword>
+<identifier> Ay </identifier>
+<symbol> , </symbol>
+<keyword> int </keyword>
+<identifier> Asize </identifier>
+<symbol> ) </symbol>
+<symbol> { </symbol>
+<keyword> let </keyword>
+<identifier> x </identifier>
+<symbol> = </symbol>
+<identifier> Ax </identifier>
+<symbol> ; </symbol>
+<keyword> let </keyword>
+<identifier> y </identifier>
+<symbol> = </symbol>
+<identifier> Ay </identifier>
+<symbol> ; </symbol>
+<keyword> let </keyword>
+<identifier> size </identifier>
+<symbol> = </symbol>
+<identifier> Asize </identifier>
+<symbol> ; </symbol>
+<keyword> do </keyword>
+<identifier> draw </identifier>
+<symbol> ( </symbol>
+<symbol> ) </symbol>
+<symbol> ; </symbol>
+<keyword> return </keyword>
+<keyword> this </keyword>
+<symbol>;</symbol>
+<symbol>}</symbol>
+</tokens>
+            """)
