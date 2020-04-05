@@ -21,7 +21,7 @@ KEYWORDS = [
     'if', 'else' ,'while', 'return'
 ]
 
-SYMBOLS = '{ } ( ) [ ] . - , ; + - * / & | < > = -'.split()
+SYMBOLS = '{ } ( ) [ ] . - , ; + - * / & | < > = ~'.split()
 
 
 class Tokenizer:

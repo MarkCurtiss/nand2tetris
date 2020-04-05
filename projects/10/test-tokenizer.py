@@ -335,3 +335,22 @@ class Square {
 <symbol>}</symbol>
 </tokens>
             """)
+
+
+    def test_while(self):
+      output = self.tokenizer.tokenize("""
+      while (~exit) {
+""")
+
+      self.assert_xml_equal(
+          output,
+          """
+<tokens>
+<keyword> while </keyword>
+<symbol> ( </symbol>
+<symbol> ~ </symbol>
+<identifier> exit </identifier>
+<symbol> ) </symbol>
+<symbol> { </symbol>
+</tokens>
+          """)

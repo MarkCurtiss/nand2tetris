@@ -18,12 +18,12 @@ if [[ -d $FILE_OR_DIR ]]; then
     for JACK in $FILE_OR_DIR/*.jack; do
         TOKEN_FILE=$(dirname $JACK)/$(basename $JACK .jack)T.xml
         log "Now comparing (./tokenizer.py $JACK) to $TOKEN_FILE"
-        diff -w <(./tokenizer.py $JACK) <(cat $TOKEN_FILE)
+        diff -wB <(./tokenizer.py $JACK) <(cat $TOKEN_FILE)
     done
 else
     log "$FILE_OR_DIR is a file"
 
     TOKEN_FILE=$(dirname $FILE_OR_DIR)/$(basename $FILE_OR_DIR .jack)T.xml
     log "Now comparing (./tokenizer.py $FILE_OR_DIR) to $TOKEN_FILE"
-    diff -w <(./tokenizer.py $FILE_OR_DIR) <(cat $TOKEN_FILE)
+    diff -wB <(./tokenizer.py $FILE_OR_DIR) <(cat $TOKEN_FILE)
 fi
