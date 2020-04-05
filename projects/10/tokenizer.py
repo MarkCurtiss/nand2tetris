@@ -17,6 +17,123 @@ SYMBOLS = '{ } ( ) [ ] - , ; + - * / & | < > = -'.split()
 class Tokenizer:
     def tokenize(self, input):
         tokens = ET.Element('tokens')
+        print('BEGIN PARSING')
+        print(f'here is our input {input}')
+
+        index = 0
+        peekahead = None
+        peekbehind = None
+
+        while (index < len(input)):
+            if index > 1:
+                peekbehind = input[index-1]
+            if index == len(input) - 1:
+                print('we are at the last element - no peeking')
+                peekahead = None
+            else:
+                peekahead = input[index+1]
+
+            x = input[index]
+
+            print(f'index: {index}, x: {x}, peekahead: {peekahead},  peekbehind: {peekbehind}')
+
+            if x == '/' and peekahead == '/':
+                index = self.tokenize_single_line_comment(tokens, index+1, input)
+            elif x == '/' and peekahead == '*':
+                index = self.tokenize_multi_line_comment(tokens, index+1, input)
+            elif x.isalpha():
+                index = self.tokenize_keyword_or_identifier(tokens, index, input)
+            elif x.isdigit():
+                index = self.tokenize_integer_constant(tokens, index, input)
+            elif x == '"':
+                index = self.tokenize_string_constant(tokens, index+1, input)
+            elif x in SYMBOLS:
+                print('SYMBOL')
+                ET.SubElement(tokens, 'symbol').text = x
+                index += 1
+            else:
+                index += 1
+
+        self.prettify_elements(tokens)
+        return ET.tostring(tokens, encoding='unicode')
+
+
+    def tokenize_single_line_comment(self, tokens, index, input):
+        while (index < len(input)):
+            if input[index] == '\n':
+                print('reached the end of single-line comment')
+                return index+1
+
+            index += 1
+
+        return index
+
+
+    def tokenize_multi_line_comment(self, tokens, index, input):
+        while (index < len(input)):
+            if input[index-1] == '*' and input[index] == '/':
+                print('reached the end of mult-line comment')
+                return index+1
+
+            index += 1
+
+        return index
+
+
+    def tokenize_keyword_or_identifier(self, tokens, index, input):
+        current_token = ''
+
+        while (index < len(input)):
+            if input[index] == ' ':
+                if current_token in KEYWORDS:
+                    print('KEYWORD')
+                    ET.SubElement(tokens, 'keyword').text = current_token
+                    return index+1
+                else:
+                    print('IDENTIFIER')
+                    ET.SubElement(tokens, 'identifier').text = current_token
+                    return index+1
+
+            current_token += input[index]
+            index += 1
+
+        return index
+
+
+    def tokenize_integer_constant(self, tokens, index, input):
+        current_token = ''
+
+        while (index < len(input)):
+            if not input[index].isdigit():
+                print('INTEGERCONSTANT')
+                ET.SubElement(tokens, 'integerConstant').text = current_token
+                return index
+
+            current_token += input[index]
+            index += 1
+
+        return index
+
+
+    def tokenize_string_constant(self, tokens, index, input):
+        current_token = ''
+
+        while (index < len(input)):
+            if input[index] == '"':
+                print('STRINGCONSTANT')
+                ET.SubElement(tokens, 'stringConstant').text = current_token
+                return index+1
+
+            current_token += input[index]
+
+            index += 1
+
+        return index
+
+
+
+    def tokenize__insane_way(self, input):
+        tokens = ET.Element('tokens')
 
         print('BEGIN PARSING')
         print(f'here is our input {input}')

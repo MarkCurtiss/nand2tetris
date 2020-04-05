@@ -72,4 +72,4 @@ if (x < 0) {
 /** Computes the average of a sequence of integers. */
 """)
 
-        self.assert_xml_equal(output, '<tokens></tokens>', True)
+        self.assert_xml_equal(output, '<tokens></tokens>')
