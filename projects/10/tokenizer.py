@@ -11,7 +11,7 @@ KEYWORDS = [
     'if', 'else' ,'while', 'return'
 ]
 
-SYMBOLS = '{ } ( ) [ ] - , ; + - * / & | < > = -'.split()
+SYMBOLS = '{ } ( ) [ ] . - , ; + - * / & | < > = -'.split()
 
 
 class Tokenizer:
@@ -22,11 +22,8 @@ class Tokenizer:
 
         index = 0
         peekahead = None
-        peekbehind = None
 
         while (index < len(input)):
-            if index > 1:
-                peekbehind = input[index-1]
             if index == len(input) - 1:
                 print('we are at the last element - no peeking')
                 peekahead = None
@@ -35,7 +32,7 @@ class Tokenizer:
 
             x = input[index]
 
-            print(f'index: {index}, x: {x}, peekahead: {peekahead},  peekbehind: {peekbehind}')
+            print(f'index: {index}, x: {x}, peekahead: {peekahead}')
 
             if x == '/' and peekahead == '/':
                 index = self.tokenize_single_line_comment(tokens, index+1, input)
@@ -84,15 +81,15 @@ class Tokenizer:
         current_token = ''
 
         while (index < len(input)):
-            if input[index] == ' ':
+            if not input[index].isalnum():
                 if current_token in KEYWORDS:
                     print('KEYWORD')
                     ET.SubElement(tokens, 'keyword').text = current_token
-                    return index+1
+                    return index
                 else:
                     print('IDENTIFIER')
                     ET.SubElement(tokens, 'identifier').text = current_token
-                    return index+1
+                    return index
 
             current_token += input[index]
             index += 1
