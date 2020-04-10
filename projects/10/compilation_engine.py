@@ -81,6 +81,18 @@ class CompilationEngine:
         return token.tag == 'identifier'
 
 
+    def is_keyword(self, token):
+        return token.tag == 'keyword'
+
+
+    def is_comma(self, token):
+        return token.tag == 'symbol' and token.text == ','
+
+
+    def is_class_var(self, token):
+        return self.is_keyword(token) and (token.text in ['static', 'field'])
+
+
     def compile_class(self, tokens, index, compilation_unit):
         LOGGER.debug(f'In compile_class we are at index {index}')
 
@@ -98,28 +110,35 @@ class CompilationEngine:
             index += 1
             LOGGER.debug(f'after parsing a keyword we are at {index}')
         else:
-            raise JackParseError(f'Expected a class keyword to open class but found {tokens[index]}')
+            raise JackParseError(f'Expected a class keyword to open class but found {tokens[index].tag , tokens[index].text}')
 
         if (self.is_identifier(tokens[index])):
             index = self.compile_identifier(tokens, index, compilation_unit)
             LOGGER.debug(f'after compiling an identifier we are at {index}')
         else:
-            raise JackParseError(f'Expected an identifier for class name  but found {tokens[index]}')
+            raise JackParseError(f'Expected an identifier for class name  but found {tokens[index].tag , tokens[index].text}')
 
         if self.is_symbol(tokens[index]):
             index = self.compile_symbol(tokens, index, compilation_unit)
             LOGGER.debug(f'after compiling a symbol we are at index {index}')
         else:
-            raise JackParseError(f'Expected a symbol to open class definition but found {tokens[index]}')
+            raise JackParseError(f'Expected a symbol to open class definition but found {tokens[index].tag , tokens[index].text}')
 
 
+        LOGGER.debug(f'our next token up is {tokens[index].tag , tokens[index].text}')
         # optional class variables and subroutineDec
+        while(not self.is_symbol(tokens[index])):
+            LOGGER.debug('Have not reached the end of class variables and subroutines yet')
+            if self.is_class_var(tokens[index]):
+                index = self.compile_class_var(tokens, index, compilation_unit)
+                LOGGER.debug(f'after compiling a class variable we are at index {index}')
+
 
         if self.is_symbol(tokens[index]):
             index = self.compile_symbol(tokens, index, compilation_unit)
             LOGGER.debug(f'after compiling a symbol we are at index {index}')
         else:
-            raise JackParseError(f'Expected a symbol to close class definition but found {tokens[index]}')
+            raise JackParseError(f'Expected a symbol to close class definition but found {tokens[index].tag , tokens[index].text}')
 
 
         return index
@@ -131,10 +150,73 @@ class CompilationEngine:
         return index+1
 
 
+    def compile_keyword(self,  tokens, index, compilation_unit):
+        current_token = tokens[index]
+        ET.SubElement(compilation_unit, 'keyword').text = current_token.text
+        return index+1
+
+
     def compile_symbol(self, tokens, index, compilation_unit):
         current_token = tokens[index]
         ET.SubElement(compilation_unit, 'symbol').text = current_token.text
         return index+1
+
+
+    def compile_class_var(self, tokens, index, compilation_unit):
+        LOGGER.debug(f'compile_class_var: index is {index}')
+        LOGGER.debug(f'compiling a class var with token {tokens[index].tag , tokens[index].text}')
+        class_variable_unit = ET.SubElement(compilation_unit, 'classVarDec')
+        # keyword | keyword  keyword identifier   symbol identifier symbol
+        # (static | field)   type    varName    (','     varname)* ';'
+
+
+        # storage type is a keyword
+        current_token = tokens[index]
+        if (not self.is_keyword(tokens[index])):
+            raise JackParseError(f'Expected a storage type to start a variable, but found {current_token.tag , current_token.text}')
+
+        index = self.compile_keyword(tokens, index, class_variable_unit)
+        LOGGER.debug(f'compile_class_var: after compiling storage type, index is {index}')
+
+        # type is a keyword (int, char, boolean) or an identifier (className)
+        current_token = tokens[index]
+        if (self.is_keyword(current_token)):
+            index = self.compile_keyword(tokens, index, class_variable_unit)
+            LOGGER.debug(f'compile_class_var: after compiling variable type, index is {index}')
+        elif (self.is_identifier(current_token)):
+            index = self.compile_identifier(tokens, index, class_variable_unit)
+            LOGGER.debug(f'compile_class_var: after compiling variable type, index is {index}')
+        else:
+            raise JackParseError(f'Expected a variable type after a static/field token, but found {current_token.tag , current_token.text}')
+
+
+        # variable name is an identifier
+        current_token = tokens[index]
+        if (not self.is_identifier(current_token)):
+            raise JackParseError(f'Expected an identifier after a variable type, but found {current_token.tag , current_token.text}')
+
+        index = self.compile_identifier(tokens, index, class_variable_unit)
+        LOGGER.debug(f'compile_class_var: after compiling variable name, index is {index}')
+
+        # , or ;
+        current_token = tokens[index]
+        LOGGER.debug(f'compile_class_var: now we are at {current_token.tag , current_token.text}')
+        if (not self.is_symbol(current_token)):
+            raise JackParseError(f'Expected a , or ; after a variable name, but found {current_token.tag , current_token.text }')
+
+        while (self.is_comma(tokens[index])):
+            index = self.compile_symbol(tokens, index, class_variable_unit)
+            LOGGER.debug(f'compile_class_var: after compiling a , index is {index}')
+            index = self.compile_identifier(tokens, index, class_variable_unit)
+            LOGGER.debug(f'compile_class_var: after compiling a variable name index is {index}')
+
+        # ;
+        if not (self.is_symbol(current_token)):
+            raise JackParseError(f'Expected a ; after variable declaration, but found {current_token.tag , current_token.text}')
+
+        index = self.compile_symbol(tokens, index, class_variable_unit)
+
+        return index
 
 
     def prettify_elements(self, tree):

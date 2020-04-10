@@ -45,4 +45,50 @@ class Main { }
     <identifier> Main </identifier>
     <symbol> { </symbol>
     <symbol> } </symbol>
-    </class>""", True)
+    </class>""")
+
+
+    def test_class_with_class_variables(self):
+        output = self.compiler.compile("""
+        class Main {
+            field int x, y;
+            field int size;
+            static boolean test;
+            field Square square;
+        }
+""")
+
+        self.assert_xml_equal(
+            output,
+            """<class>
+    <keyword> class </keyword>
+    <identifier> Main </identifier>
+    <symbol> { </symbol>
+    <classVarDec>
+        <keyword> field </keyword>
+        <keyword> int </keyword>
+        <identifier> x </identifier>
+        <symbol> , </symbol>
+        <identifier> y </identifier>
+        <symbol> ; </symbol>
+    </classVarDec>
+    <classVarDec>
+        <keyword> field </keyword>
+        <keyword> int </keyword>
+        <identifier> size </identifier>
+        <symbol> ; </symbol>
+    </classVarDec>
+    <classVarDec>
+        <keyword> static </keyword>
+        <keyword> boolean </keyword>
+        <identifier> test </identifier>
+        <symbol> ; </symbol>
+    </classVarDec>
+    <classVarDec>
+        <keyword> field </keyword>
+        <identifier> Square </identifier>
+        <identifier> square </identifier>
+        <symbol> ; </symbol>
+    </classVarDec>
+    <symbol> } </symbol>
+    </class>""")    
