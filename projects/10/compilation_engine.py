@@ -89,8 +89,24 @@ class CompilationEngine:
         return token.tag == 'symbol' and token.text == ','
 
 
+    def is_closing_paren(self, token):
+        return token.tag == 'symbol' and token.text == ')'
+
+
     def is_class_var(self, token):
-        return self.is_keyword(token) and (token.text in ['static', 'field'])
+        return self.is_keyword(token) and token.text in ['static', 'field']
+
+
+    def is_subroutine_declaration(self, token):
+        return self.is_keyword(token) and token.text in ['function', 'constructor', 'method']
+
+
+    def is_var(self, token):
+        return self.is_keyword(token) and token.text == 'var'
+
+
+    def is_statement(self, token):
+        return self.is_keyword(token) and token.text in ['let' ,'if', 'while', 'do', 'return']
 
 
     def compile_class(self, tokens, index, compilation_unit):
@@ -125,13 +141,16 @@ class CompilationEngine:
             raise JackParseError(f'Expected a symbol to open class definition but found {tokens[index].tag , tokens[index].text}')
 
 
-        LOGGER.debug(f'our next token up is {tokens[index].tag , tokens[index].text}')
         # optional class variables and subroutineDec
+        LOGGER.debug(f'our next token up is {tokens[index].tag , tokens[index].text}')
         while(not self.is_symbol(tokens[index])):
-            LOGGER.debug('Have not reached the end of class variables and subroutines yet')
+            LOGGER.debug(f'Have not reached the end of class variables and subroutines yet; current token is {tokens[index].tag , tokens[index].text}')
             if self.is_class_var(tokens[index]):
                 index = self.compile_class_var(tokens, index, compilation_unit)
                 LOGGER.debug(f'after compiling a class variable we are at index {index}')
+            elif self.is_subroutine_declaration(tokens[index]):
+                index = self.compile_subroutine_declaration(tokens, index, compilation_unit)
+                LOGGER.debug(f'after compiling a subroutine we are at index {index}')
 
 
         if self.is_symbol(tokens[index]):
@@ -217,6 +236,88 @@ class CompilationEngine:
         index = self.compile_symbol(tokens, index, class_variable_unit)
 
         return index
+
+
+    def compile_subroutine_declaration(self, tokens, index, compilation_unit):
+        LOGGER.debug(f'compile_subroutine_declaration: index is {index}')
+        LOGGER.debug(f'compiling a subroutine with token {tokens[index].tag , tokens[index].text}')
+        subroutine_unit = ET.SubElement(compilation_unit, 'subroutineDec')
+        #  keyword       keyword    keyword  kw     id    identifier     sym ..            sym ...
+        # (constructor | function | method) (void | type) subRoutineNmae '(' parameterList ')' subRoutineBody
+
+        # function type
+        index = self.compile_keyword(tokens, index, subroutine_unit)
+
+        # return type
+        current_token = tokens[index]
+        if (self.is_keyword(current_token)):
+            index = self.compile_keyword(tokens, index, subroutine_unit)
+        elif (self.is_identifier(current_token)):
+            index = self.compile_identifier(tokens, index, subroutine_unit)
+        else:
+            raise JackParseError(f'expected a keyword or identifier after a method declaration but found {current_token.tag , current_token.text}')
+
+        # function name
+        index = self.compile_identifier(tokens, index, subroutine_unit)
+        # ( parameter list )
+        index = self.compile_symbol(tokens, index, subroutine_unit)
+        index = self.compile_parameter_list(tokens, index, subroutine_unit)
+        index = self.compile_symbol(tokens, index, subroutine_unit)
+
+        index = self.compile_subroutine_body(tokens, index, subroutine_unit)
+
+        return index
+
+
+    def compile_parameter_list(self, tokens, index, compilation_unit):
+        LOGGER.debug(f'compile_parameter_list: index is {index}')
+        LOGGER.debug(f'compiling a parameter list with token {tokens[index].tag , tokens[index].text}')
+        parameter_list_unit = ET.SubElement(compilation_unit, 'parameterList')
+
+        # sym  kw/id   id        sym kw/id id     sym sym
+        # (    type    varName  ',' type  varName*  )
+
+        while (not self.is_closing_paren(tokens[index])):
+            if (self.is_keyword(tokens[index])):
+                index = self.compile_keyword(tokens, index, parameter_list_unit)
+            elif (self.is_identifier(tokens[index])):
+                index = self.compile_identifier(tokens, index, parameter_list_unit)
+            else:
+                raise JackParseError(f'expected a keyword/identifier after opening a parmeter list but found {tokens[index].tag , tokens[index].text}')
+
+            index = self.compile_identifier(tokens, index, parameter_list_unit)
+
+            if (self.is_comma(tokens[index])):
+                index = self.compile_symbol(tokens, index, parameter_list_unit)
+
+        return index
+
+
+    def compile_subroutine_body(self, tokens, index, compilation_unit):
+        LOGGER.debug(f'compile_subroutine_body: index is {index}')
+        LOGGER.debug(f'compiling a subroutine body with token {tokens[index].tag , tokens[index].text}')
+        subroutine_unit = ET.SubElement(compilation_unit, 'subroutineBody')
+
+
+        # { varDec statements }
+        index = self.compile_symbol(tokens, index, subroutine_unit)
+        index = self.compile_var_def(tokens, index, subroutine_unit)
+        index = self.compile_statements(tokens, index, subroutine_unit)
+        index = self.compile_symbol(tokens, index, subroutine_unit)
+
+        return index
+
+
+    def compile_var_def(self, tokens, index, compilation_unit):
+        if not (self.is_var(tokens[index])):
+            LOGGER.debug(f'compile_var_def: no variables found at index {index} token {tokens[index].tag , tokens[index].text}')
+            return index
+
+
+    def compile_statements(self, tokens, index, compilation_unit):
+        if (not self.is_statement(tokens[index])):
+            LOGGER.debug('compile_statements: no statements found at index {index} token {tokens[index].tag , tokens[index].text}')
+            return index
 
 
     def prettify_elements(self, tree):

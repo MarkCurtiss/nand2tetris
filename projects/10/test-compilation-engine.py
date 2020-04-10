@@ -34,7 +34,7 @@ class CompilationEngineTest(unittest.TestCase):
 
     def test_empty_class(self):
         output = self.compiler.compile("""
-class Main { } 
+class Main { }
 """
         )
 
@@ -91,4 +91,42 @@ class Main { }
         <symbol> ; </symbol>
     </classVarDec>
     <symbol> } </symbol>
-    </class>""")    
+    </class>""")
+
+
+    def test_class_with_variables_and_empty_subroutine(self):
+        output = self.compiler.compile("""
+        class Main {
+            field int size;
+            function void main() { }
+        }
+""")
+
+        self.assert_xml_equal(
+            output,
+            """<class>
+    <keyword> class </keyword>
+    <identifier> Main </identifier>
+    <symbol> { </symbol>
+    <classVarDec>
+        <keyword> field </keyword>
+        <keyword> int </keyword>
+        <identifier> size </identifier>
+        <symbol> ; </symbol>
+    </classVarDec>
+    <subroutineDec>
+        <keyword> function </keyword>
+        <keyword> void </keyword>
+        <identifier> main </identifier>
+        <symbol> ( </symbol>
+        <parameterList>
+        </parameterList>
+        <symbol> ) </symbol>
+        <subroutineBody>
+          <symbol> { </symbol>
+          <symbol> } </symbol>
+        </subroutineBody>
+    </subroutineDec>
+    <symbol> } </symbol>
+</class>""", True
+        )
