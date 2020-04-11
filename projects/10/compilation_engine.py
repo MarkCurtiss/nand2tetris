@@ -14,7 +14,7 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %T'
 )
 LOGGER = logging.getLogger('compilation-engine')
-LOGGER.setLevel(logging.DEBUG)
+LOGGER.setLevel(logging.INFO)
 
 
 class JackCompilerError(Exception):
@@ -75,6 +75,10 @@ class CompilationEngine:
 
     def is_symbol(self, token):
         return token.tag == 'symbol'
+
+    def is_operation(self, token):
+        return token.tag == 'symbol' and token.text in '+-*/&|<>='
+
 
 
     def is_identifier(self, token):
@@ -535,12 +539,19 @@ class CompilationEngine:
 
     def compile_expression_list(self, tokens, index, compilation_unit):
         self.log_state('compile_expression_list', index, tokens)
+
         return index
 
 
     def compile_expression(self, tokens, index, compilation_unit):
+        self.log_state('compile_expression', index, tokens)
         expression_unit = ET.SubElement(compilation_unit, 'expression')
+
         index = self.compile_term(tokens, index, expression_unit)
+        if (self.is_operation(tokens[index])):
+            index = self.compile_symbol(tokens, index, expression_unit)
+            index = self.compile_expression(tokens, index, expression_unit)
+
         return index
 
 
@@ -568,4 +579,5 @@ if __name__ == '__main__':
     # to use against a Jack file
     # diff -w <(./compilation_engine.py Square/Square.jack ) <(cat Square/SquareT.xml)
     with open(filename, 'r') as f:
-        compiler.compile(''.join(f.readlines()))
+        output = compiler.compile(''.join(f.readlines()))
+        print(f'{output}')
