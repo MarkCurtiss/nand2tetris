@@ -61,7 +61,7 @@ class CompilationEngine:
             index += 1
 
         self.prettify_elements(compilation_unit)
-        return ET.tostring(compilation_unit, encoding='unicode')
+        return ET.tostring(compilation_unit, encoding='unicode', short_empty_elements=False)
 
 
     def is_first_class(self, index):
