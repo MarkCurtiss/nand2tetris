@@ -48,7 +48,7 @@ class CompilationEngine:
                 peekahead = tokens[index+1]
 
             token = tokens[index]
-            LOGGER.debug(f'index: {index}, token: {token}, peekahead: {peekahead}')
+            LOGGER.debug(f'index: {index}, token: {token.tag , token.text}, peekahead: {peekahead.tag , peekahead.text}')
 
             # main parse loop
             if self.is_class(token):
@@ -301,7 +301,8 @@ class CompilationEngine:
 
         # { varDec statements }
         index = self.compile_symbol(tokens, index, subroutine_unit)
-        index = self.compile_var_def(tokens, index, subroutine_unit)
+        while (self.is_var(tokens[index])):
+            index = self.compile_var_def(tokens, index, subroutine_unit)
         index = self.compile_statements(tokens, index, subroutine_unit)
         index = self.compile_symbol(tokens, index, subroutine_unit)
 
@@ -313,11 +314,36 @@ class CompilationEngine:
             LOGGER.debug(f'compile_var_def: no variables found at index {index} token {tokens[index].tag , tokens[index].text}')
             return index
 
+        LOGGER.debug(f'compile_var_def: found some variable definitions at index {index} token {tokens[index].tag , tokens[index].text}')
+        var_unit = ET.SubElement(compilation_unit, 'varDec')
+        # var
+        index = self.compile_keyword(tokens, index, var_unit)
+
+        # type
+        if (self.is_identifier(tokens[index])):
+            index = self.compile_identifier(tokens, index, var_unit)
+        elif (self.is_keyword(tokens[index])):
+            index = self.compile_keyword(tokens, index, var_unit)
+        else:
+            raise JackParseError(f'keyword or identifier expected in variable definition at index {index}, found {tokens[index].tag , tokens[index].text}')
+
+        # identifier
+        index = self.compile_identifier(tokens, index, var_unit)
+
+        while (self.is_comma(tokens[index])):
+            index = self.compile_symbol(tokens, index, var_unit)
+            LOGGER.debug(f'compile_var_def: after compiling a , index is {index}')
+            index = self.compile_identifier(tokens, index, var_unit)
+            LOGGER.debug(f'compile_var_def: after compiling a variable name index is {index}')
+
+        # ;
+        index = self.compile_symbol(tokens, index, var_unit)
+
+        return index
 
     def compile_statements(self, tokens, index, compilation_unit):
-        if (not self.is_statement(tokens[index])):
-            LOGGER.debug('compile_statements: no statements found at index {index} token {tokens[index].tag , tokens[index].text}')
-            return index
+        statements_unit = ET.SubElement(compilation_unit, 'statements')
+        return index
 
 
     def prettify_elements(self, tree):
@@ -327,11 +353,9 @@ class CompilationEngine:
 if __name__ == '__main__':
     filename = sys.argv[1]
 
-    tokenizer = Tokenizer()
     compiler = CompilationEngine()
     LOGGER.debug(f'now tokenizing file: {filename}')
     # to use against a Jack file
-    # diff -w <(./tokenizer.py Square/Square.jack ) <(cat Square/SquareT.xml)
+    # diff -w <(./compilation_engine.py Square/Square.jack ) <(cat Square/SquareT.xml)
     with open(filename, 'r') as f:
-        tokens = tokenizer.tokenize(''.join(f.readlines()))
-        compiler.compile(tokens)
+        compiler.compile(''.join(f.readlines()))

@@ -130,3 +130,57 @@ class Main { }
     <symbol> } </symbol>
 </class>""", True
         )
+
+    def test_subroutine_with_variables_and_no_statements(self):
+        output = self.compiler.compile("""
+        class Main {
+            function void main() {
+                var Array a;
+                var int length;
+                var int i, sum;
+            }
+        }
+""")
+
+        self.assert_xml_equal(
+            output,
+            """<class>
+    <keyword> class </keyword>
+    <identifier> Main </identifier>
+    <symbol> { </symbol>
+    <subroutineDec>
+        <keyword> function </keyword>
+        <keyword> void </keyword>
+        <identifier> main </identifier>
+        <symbol> ( </symbol>
+        <parameterList>
+        </parameterList>
+        <symbol> ) </symbol>
+        <subroutineBody>
+          <symbol> { </symbol>
+          <varDec>
+            <keyword> var </keyword>
+            <identifier> Array </identifier>
+            <identifier> a </identifier>
+            <symbol> ; </symbol>
+          </varDec>
+          <varDec>
+            <keyword> var </keyword>
+            <keyword> int </keyword>
+            <identifier> length </identifier>
+            <symbol> ; </symbol>
+          </varDec>
+          <varDec>
+            <keyword> var </keyword>
+            <keyword> int </keyword>
+            <identifier> i </identifier>
+            <symbol> , </symbol>
+            <identifier> sum </identifier>
+            <symbol> ; </symbol>
+          </varDec>
+          <statements></statements>
+          <symbol> } </symbol>
+        </subroutineBody>
+    </subroutineDec>
+    <symbol> } </symbol>
+</class>""")
