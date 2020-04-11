@@ -124,6 +124,7 @@ class Main { }
         <symbol> ) </symbol>
         <subroutineBody>
           <symbol> { </symbol>
+          <statements/>
           <symbol> } </symbol>
         </subroutineBody>
     </subroutineDec>
@@ -184,3 +185,48 @@ class Main { }
     </subroutineDec>
     <symbol> } </symbol>
 </class>""")
+
+
+    def test_let_statement(self):
+       output = self.compiler.compile("""
+        class Main {
+            function void main() {
+                let i = 0;
+            }
+        }
+""")
+
+       self.assert_xml_equal(
+            output,
+            """<class>
+    <keyword> class </keyword>
+    <identifier> Main </identifier>
+    <symbol> { </symbol>
+    <subroutineDec>
+        <keyword> function </keyword>
+        <keyword> void </keyword>
+        <identifier> main </identifier>
+        <symbol> ( </symbol>
+        <parameterList>
+        </parameterList>
+        <symbol> ) </symbol>
+        <subroutineBody>
+          <symbol> { </symbol>
+          <statements>
+              <letStatement>
+                <keyword> let </keyword>
+                <identifier> i </identifier>
+                <symbol> = </symbol>
+                <expression>
+                  <term>
+                    <integerConstant> 0 </integerConstant>
+                  </term>
+                </expression>
+                <symbol> ; </symbol>
+              </letStatement>
+           </statements>
+          <symbol> } </symbol>
+        </subroutineBody>
+    </subroutineDec>
+    <symbol> } </symbol>
+    </class>""")

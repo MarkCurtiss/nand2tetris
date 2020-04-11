@@ -97,6 +97,10 @@ class CompilationEngine:
         return self.is_keyword(token) and token.text in ['static', 'field']
 
 
+    def is_let_statement(self, token):
+        return self.is_keyword(token) and token.text == 'let'
+
+
     def is_subroutine_declaration(self, token):
         return self.is_keyword(token) and token.text in ['function', 'constructor', 'method']
 
@@ -107,6 +111,14 @@ class CompilationEngine:
 
     def is_statement(self, token):
         return self.is_keyword(token) and token.text in ['let' ,'if', 'while', 'do', 'return']
+
+
+    def is_integer_constant(self, token):
+        return token.text.isdigit()
+
+
+    def log_state(self, method, index, tokens):
+        LOGGER.debug(f'{method}: we are at index {index} and looking at {tokens[index].tag , tokens[index].text}')
 
 
     def compile_class(self, tokens, index, compilation_unit):
@@ -174,9 +186,16 @@ class CompilationEngine:
         ET.SubElement(compilation_unit, 'keyword').text = current_token.text
         return index+1
 
+            # index = self.simple_compile(current_token, index, 'integerConstant', compilation_unit)
+    def simple_compile(self, token, index, tag, compilation_unit):
+        ET.SubElement(compilation_unit, tag).text = token.text
+        return index+1
+
 
     def compile_symbol(self, tokens, index, compilation_unit):
         current_token = tokens[index]
+        if (not self.is_symbol(current_token)):
+            raise JackParseError(f'compile_symbol called on a non-symbol! {tokens[index].tag, tokens[index].text}')
         ET.SubElement(compilation_unit, 'symbol').text = current_token.text
         return index+1
 
@@ -304,6 +323,7 @@ class CompilationEngine:
         while (self.is_var(tokens[index])):
             index = self.compile_var_def(tokens, index, subroutine_unit)
         index = self.compile_statements(tokens, index, subroutine_unit)
+        self.log_state('compile_subroutine_body', index, tokens)
         index = self.compile_symbol(tokens, index, subroutine_unit)
 
         return index
@@ -334,7 +354,7 @@ class CompilationEngine:
             index = self.compile_symbol(tokens, index, var_unit)
             LOGGER.debug(f'compile_var_def: after compiling a , index is {index}')
             index = self.compile_identifier(tokens, index, var_unit)
-            LOGGER.debug(f'compile_var_def: after compiling a variable name index is {index}')
+            LOGGER.debug(f'compile_var_def: after compiling a variable name index is {index} {tokens[index].tag , tokens[index].text}')
 
         # ;
         index = self.compile_symbol(tokens, index, var_unit)
@@ -343,6 +363,61 @@ class CompilationEngine:
 
     def compile_statements(self, tokens, index, compilation_unit):
         statements_unit = ET.SubElement(compilation_unit, 'statements')
+        LOGGER.debug(f'compile_statements {index} {tokens[index].tag , tokens[index].text}')
+        current_token = tokens[index]
+        if (not self.is_statement(current_token)):
+            return index
+
+
+        if (self.is_let_statement(current_token)):
+            index = self.compile_let_statement(tokens, index, statements_unit)
+        elif (self.is_if_statement(current_token)):
+            index = self.compile_if_statement(tokens, index, statements_unit)
+        elif (self.is_while_statement(current_token)):
+            index = self.compile_while_statement(tokens, index, statements_unit)
+        elif (self.is_do_statement(current_token)):
+            index = self.compile_do_statement(tokens, index, statements_unit)
+        elif (self.is_return_statement(current_token)):
+            index = self.compile_return_statement(tokens, index, statements_unit)
+        else:
+            raise JackParseError('compile_statements found an unexpected statement type {current_token.tag , current_token.text}')
+
+
+        return index
+
+
+    def compile_let_statement(self, tokens, index, compilation_unit):
+        let_unit = ET.SubElement(compilation_unit, 'letStatement')
+
+        self.log_state('compile_let_statement', index, tokens)
+
+        # let
+        index = self.compile_keyword(tokens, index, let_unit)
+        # identifier
+        index = self.compile_identifier(tokens, index, let_unit)
+        # expression or symbol
+        index = self.compile_symbol(tokens, index, let_unit)
+        # expression
+        index = self.compile_expression(tokens, index, let_unit)
+        # ;
+        index = self.compile_symbol(tokens, index, let_unit)
+
+        return index
+
+
+    def compile_expression(self, tokens, index, compilation_unit):
+        expression_unit = ET.SubElement(compilation_unit, 'expression')
+        index = self.compile_term(tokens, index, expression_unit)
+        return index
+
+
+    def compile_term(self, tokens, index, compilation_unit):
+        term_unit = ET.SubElement(compilation_unit, 'term')
+        current_token = tokens[index]
+
+        if (self.is_integer_constant(current_token)):
+            index = self.simple_compile(current_token, index, 'integerConstant', term_unit)
+
         return index
 
 
