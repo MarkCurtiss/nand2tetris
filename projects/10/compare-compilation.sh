@@ -1,5 +1,9 @@
 #!/bin/bash
 
+set -e 
+set -o pipefail
+
+
 if [ $# -ne 1 ];
     then echo "Please specify a .jack file or a directory"
 fi

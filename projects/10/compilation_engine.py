@@ -146,11 +146,11 @@ class CompilationEngine:
 
 
     def is_integer_constant(self, token):
-        return token.text.isdigit()
+        return token.tag == 'integerConstant'
 
 
     def is_string_constant(self, token):
-        return token.text == '"'
+        return token.tag == 'stringConstant'
 
 
     def log_state(self, method, index, tokens):
@@ -448,6 +448,8 @@ class CompilationEngine:
         if (not self.is_let_statement(tokens[index])):
             raise JackParseError(f'compile_let_statement called on a non-let statement {tokens[index].tag , tokens[index].text}')
 
+	#let length = Keyboard.readInt("HOW MANY NUMBERS? ");
+        #let a[i] = Keyboard.readInt("ENTER THE NEXT NUMBER: ");
         # let
         index = self.compile_keyword(tokens, index, let_unit)
         # identifier
@@ -463,7 +465,9 @@ class CompilationEngine:
 
         index = self.compile_symbol(tokens, index, let_unit, expected='=')
         # expression
+        LOGGER.debug(f'compile_let_statement; about to compile an expression at index {index}: {tokens[index].text}')
         index = self.compile_expression(tokens, index, let_unit)
+        LOGGER.debug(f'compile_let_statement; done compiling expression and now looking for ;. current token is {tokens[index].text} and last token was {tokens[index-1].text}')
         # ;
         index = self.compile_symbol(tokens, index, let_unit)
 
@@ -498,7 +502,6 @@ class CompilationEngine:
         index = self.compile_expression_list(tokens, index, compilation_unit)
         # )
         index = self.compile_symbol(tokens, index, compilation_unit, expected=')')
-        index = self.compile_symbol(tokens, index, compilation_unit, expected=';')
 
         return index
 
@@ -517,6 +520,7 @@ class CompilationEngine:
         # subroutineName OR className OR varName
         self.log_state('compile_do_statement', index, tokens)
         index = self.compile_subroutine_call(tokens, index, do_unit)
+        index = self.compile_symbol(tokens, index, do_unit, expected=';')
 
         return index
 
@@ -590,11 +594,18 @@ class CompilationEngine:
         self.log_state('compile_expression', index, tokens)
         expression_unit = ET.SubElement(compilation_unit, 'expression')
 
+        # next_five_tokens = [ x.text for x in [ tokens[index], tokens[index+1], tokens[index+2], tokens[index+3], tokens[index+4] ] ]
+        # LOGGER.debug(f'in compile_expression a {index}, the next 7 tokens are {next_five_tokens}')
+
         index = self.compile_term(tokens, index, expression_unit)
+        # next_five_tokens = [ x.text for x in [ tokens[index], tokens[index+1], tokens[index+2], tokens[index+3], tokens[index+4] ] ]
+        # LOGGER.debug(f'in compile_expression at {index}, we just compiled a term and the next 5 tokens are {next_five_tokens}')
         while (self.is_operation(tokens[index])):
+            LOGGER.debug(f'in compile_expression at {index} we found an operationr {tokens[index].text}')
             index = self.compile_symbol(tokens, index, expression_unit)
             index = self.compile_term(tokens, index, expression_unit)
 
+        LOGGER.debug(f'compile_expression - done compiling expression, now at token {tokens[index].text}')
         return index
 
 
@@ -602,12 +613,15 @@ class CompilationEngine:
         term_unit = ET.SubElement(compilation_unit, 'term')
         current_token = tokens[index]
 
+        # next_five_tokens = [ x.text for x in [ tokens[index], tokens[index+1], tokens[index+2], tokens[index+3], tokens[index+4] ] ]
+        # LOGGER.debug(f'in compile_term, the next 5 tokens are {next_five_tokens}')
+
         # integer | string | keyword | varName | varName [ expression ] | subroutineCall | ( expression ) | unaryOpTerm
         if (self.is_integer_constant(tokens[index])):
             self.log_state('compile_term', index, tokens)
             index = self.simple_compile(tokens[index], index, 'integerConstant', term_unit)
         elif (self.is_string_constant(tokens[index])):
-            index = self.compile_string_constant(tokens, index, 'stringConstant', term_unit)
+            index = self.simple_compile(tokens[index], index, 'stringConstant', term_unit)
         elif (self.is_keyword(tokens[index])):
             index = self.compile_keyword(tokens, index, term_unit)
         elif (self.is_identifier(tokens[index])):
@@ -619,7 +633,7 @@ class CompilationEngine:
                 index = self.compile_identifier(tokens, index, term_unit)
                 index = self.compile_symbol(tokens, index, term_unit, expected='[')
                 index = self.compile_expression(tokens, index, term_unit)
-                index = self.compile_expression(tokens, index, term_unit, expected=']')
+                index = self.compile_symbol(tokens, index, term_unit, expected=']')
             elif tokens[index+1].text in '(.':
                 index = self.compile_subroutine_call(tokens, index, term_unit)
             else:
@@ -633,7 +647,6 @@ class CompilationEngine:
               index = self.compile_term(tokens, index, term_unit)
         else:
             raise JackParseError(f'compile_term called on an unexpected token {tokens[index].text}')
-
 
         return index
 

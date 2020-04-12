@@ -295,7 +295,7 @@ class Main { }
     </subroutineBody>
   </subroutineDec>
   <symbol> } </symbol>
-</class>""")
+</class>""", True)
 
 
     def test_if_no_else(self):
