@@ -48,15 +48,10 @@ class CompilationEngine:
                 peekahead = tokens[index+1]
 
             token = tokens[index]
-            LOGGER.debug(f'index: {index}, token: {token.tag , token.text}, peekahead: {peekahead.tag , peekahead.text}')
 
-            # main parse loop
             if self.is_class(token):
                 LOGGER.debug('found a class')
                 index = self.compile_class(tokens, index, compilation_unit)
-
-            # . . .
-
 
             index += 1
 
@@ -160,13 +155,6 @@ class CompilationEngine:
     def compile_class(self, tokens, index, compilation_unit):
         LOGGER.debug(f'In compile_class we are at index {index}')
 
-        # <keyword> class
-        #   <identifier> class name
-        #   <symbol> {
-        # classvariables?
-        # subroutineDec?
-        # }
-
         current_token = tokens[index]
         if (self.is_class(current_token)):
             LOGGER.debug(f'our current token is tag {current_token.tag} and text {current_token.text}')
@@ -225,8 +213,6 @@ class CompilationEngine:
 
         ET.SubElement(compilation_unit, 'keyword').text = current_token.text
         return index+1
-
-            # index = self.simple_compile(current_token, index, 'integerConstant', compilation_unit)
 
 
     def simple_compile(self, token, index, tag, compilation_unit):
