@@ -129,8 +129,7 @@ class Main { }
         </subroutineBody>
     </subroutineDec>
     <symbol> } </symbol>
-</class>""", True
-        )
+</class>""")
 
     def test_subroutine_with_variables_and_no_statements(self):
         output = self.compiler.compile("""
@@ -298,9 +297,90 @@ class Main { }
 </class>""")
 
 
-def test_if_no_else(self):
-    output = self.compiler.compile("""method void moveSquare() {
-      if (direction) { do square.moveUp(); }
-      if (direction) { do square.moveDown(); }
-      return;
-   }""")
+    def test_if_no_else(self):
+            output = self.compiler.compile("""
+            class Main {
+                method void moveSquare() {
+                    if (direction) { do square.moveUp(); }
+                    if (direction) { do square.moveDown(); }
+                    return;
+            }
+            }""")
+
+            self.assert_xml_equal(
+                output,
+                """<class>
+  <keyword> class </keyword>
+  <identifier> Main </identifier>
+  <symbol> { </symbol>
+  <subroutineDec>
+    <keyword> method </keyword>
+    <keyword> void </keyword>
+    <identifier> moveSquare </identifier>
+    <symbol> ( </symbol>
+    <parameterList>
+    </parameterList>
+    <symbol> ) </symbol>
+    <subroutineBody>
+      <symbol> { </symbol>
+      <statements>
+        <ifStatement>
+          <keyword> if </keyword>
+          <symbol> ( </symbol>
+          <expression>
+            <term>
+              <identifier> direction </identifier>
+            </term>
+          </expression>
+          <symbol> ) </symbol>
+          <symbol> { </symbol>
+          <statements>
+            <doStatement>
+              <keyword> do </keyword>
+              <identifier> square </identifier>
+              <symbol> . </symbol>
+              <identifier> moveUp </identifier>
+              <symbol> ( </symbol>
+              <expressionList>
+              </expressionList>
+              <symbol> ) </symbol>
+              <symbol> ; </symbol>
+            </doStatement>
+          </statements>
+          <symbol> } </symbol>
+        </ifStatement>
+        <ifStatement>
+          <keyword> if </keyword>
+          <symbol> ( </symbol>
+          <expression>
+            <term>
+              <identifier> direction </identifier>
+            </term>
+          </expression>
+          <symbol> ) </symbol>
+          <symbol> { </symbol>
+          <statements>
+            <doStatement>
+              <keyword> do </keyword>
+              <identifier> square </identifier>
+              <symbol> . </symbol>
+              <identifier> moveDown </identifier>
+              <symbol> ( </symbol>
+              <expressionList>
+              </expressionList>
+              <symbol> ) </symbol>
+              <symbol> ; </symbol>
+            </doStatement>
+          </statements>
+          <symbol> } </symbol>
+        </ifStatement>
+         <returnStatement>
+           <keyword>return</keyword>
+           <symbol>;</symbol>
+         </returnStatement>
+      </statements>
+        <symbol> } </symbol>
+    </subroutineBody>
+  </subroutineDec>
+  <symbol> } </symbol>
+</class>""")

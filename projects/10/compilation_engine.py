@@ -14,7 +14,7 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %T'
 )
 LOGGER = logging.getLogger('compilation-engine')
-LOGGER.setLevel(logging.DEBUG)
+LOGGER.setLevel(logging.INFO)
 
 
 class JackCompilerError(Exception):
@@ -526,7 +526,7 @@ class CompilationEngine:
         index = self.compile_symbol(tokens, index, if_unit, expected='}')
 
 
-        if (self.is_keyword(tokens[index])):
+        if (self.is_statement_type(tokens[index], 'else')):
             self.log_state('compile_if_statement - else branch', index, tokens)
             index = self.compile_keyword(tokens, index, if_unit, expected='else')
             self.log_state('compile_if_statement - else branch', index, tokens)
