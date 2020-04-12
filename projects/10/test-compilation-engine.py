@@ -296,3 +296,11 @@ class Main { }
   </subroutineDec>
   <symbol> } </symbol>
 </class>""")
+
+
+def test_if_no_else(self):
+    output = self.compiler.compile("""method void moveSquare() {
+      if (direction) { do square.moveUp(); }
+      if (direction) { do square.moveDown(); }
+      return;
+   }""")

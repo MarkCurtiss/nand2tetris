@@ -14,7 +14,7 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %T'
 )
 LOGGER = logging.getLogger('compilation-engine')
-LOGGER.setLevel(logging.INFO)
+LOGGER.setLevel(logging.DEBUG)
 
 
 class JackCompilerError(Exception):
@@ -555,6 +555,7 @@ class CompilationEngine:
             index = self.compile_expression(tokens, index, expression_list_unit)
 
         return index
+
 
 
     def compile_expression(self, tokens, index, compilation_unit):
