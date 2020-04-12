@@ -146,7 +146,7 @@ class CompilationEngine:
 
 
     def log_state(self, method, index, tokens):
-        LOGGER.debug(f'{method}: we are at index {index} and looking at {tokens[index].tag , tokens[index].text}')
+        LOGGER.debug(f'{method}: we are at index {index} (file line {index+2}) and looking at {tokens[index].tag , tokens[index].text}')
 
 
     def compile_class(self, tokens, index, compilation_unit):
@@ -462,23 +462,26 @@ class CompilationEngine:
     def compile_do_statement(self, tokens, index, compilation_unit):
         do_unit = ET.SubElement(compilation_unit, 'doStatement')
 
-
         # do subroutineName '( expressionList') ;
         # OR
         # do (className | varName) . subroutineName '(' expressionList ')';
 
 
         # do
+        self.log_state('compile_do_statement', index, tokens)
         index = self.compile_keyword(tokens, index, do_unit)
         # subroutineName OR className OR varName
+        self.log_state('compile_do_statement', index, tokens)
         index = self.compile_identifier(tokens, index, do_unit)
 
         # we could be calling a standalone routine or a method; in the latter case we'll see a .
         if (self.is_symbol_type(tokens[index], '.')):
+            self.log_state('compile_do_statement - method branch', index, tokens)
             index = self.compile_symbol(tokens, index, do_unit, expected='.')
             index = self.compile_identifier(tokens, index, do_unit)
 
 
+        self.log_state('compile_do_statement', index, tokens)
         # (
         index = self.compile_symbol(tokens, index, do_unit, expected='(')
         # ??
@@ -539,6 +542,17 @@ class CompilationEngine:
 
     def compile_expression_list(self, tokens, index, compilation_unit):
         self.log_state('compile_expression_list', index, tokens)
+        expression_list_unit = ET.SubElement(compilation_unit, 'expressionList')
+
+        # expression lists always occur inside of () and can be empty
+        # it's easier for us to tell here that we don't have any expressions rather than inside compile_expression
+        if self.is_closing_paren(tokens[index]):
+            return index
+
+        index = self.compile_expression(tokens, index, expression_list_unit)
+        while(self.is_comma(tokens[index])):
+            index = self.compile_symbol(tokens, index, expression_list_unit, expected=',')
+            index = self.compile_expression(tokens, index, expression_list_unit)
 
         return index
 
