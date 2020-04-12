@@ -76,9 +76,13 @@ class CompilationEngine:
     def is_symbol(self, token):
         return token.tag == 'symbol'
 
+
     def is_operation(self, token):
         return token.tag == 'symbol' and token.text in '+-*/&|<>='
 
+
+    def is_unary_op(self, token):
+        return token.tag == 'symbol' and token.text in '-~'
 
 
     def is_identifier(self, token):
@@ -143,6 +147,10 @@ class CompilationEngine:
 
     def is_integer_constant(self, token):
         return token.text.isdigit()
+
+
+    def is_string_constant(self, token):
+        return token.text == '"'
 
 
     def log_state(self, method, index, tokens):
@@ -219,7 +227,10 @@ class CompilationEngine:
         return index+1
 
             # index = self.simple_compile(current_token, index, 'integerConstant', compilation_unit)
+
+
     def simple_compile(self, token, index, tag, compilation_unit):
+        LOGGER.debug(f'simple_compile called with token {token.text} and index {index} and compilation_unit {compilation_unit}')
         ET.SubElement(compilation_unit, tag).text = token.text
         return index+1
 
@@ -458,6 +469,39 @@ class CompilationEngine:
 
         return index
 
+    def compile_while_statement(self, tokens, index, compilation_unit):
+        while_unit = ET.SubElement(compilation_unit, 'whileStatement')
+
+        index = self.compile_keyword(tokens, index, while_unit, expected='while')
+        index = self.compile_symbol(tokens, index, while_unit, expected='(')
+        index = self.compile_expression(tokens, index, while_unit)
+        index = self.compile_symbol(tokens, index, while_unit, expected=')')
+        index = self.compile_symbol(tokens, index, while_unit, expected='{')
+        index = self.compile_statements(tokens, index, while_unit)
+        index = self.compile_symbol(tokens, index, while_unit, expected='}')
+
+        return index
+
+
+    def compile_subroutine_call(self, tokens, index, compilation_unit, already_seen_identifier=False):
+        if not already_seen_identifier:
+            index = self.compile_identifier(tokens, index, compilation_unit)
+
+        # we could be calling a standalone routine or a method; in the latter case we'll see a .
+        if (self.is_symbol_type(tokens[index], '.')):
+            index = self.compile_symbol(tokens, index, compilation_unit, expected='.')
+            index = self.compile_identifier(tokens, index, compilation_unit)
+
+        # (
+        index = self.compile_symbol(tokens, index, compilation_unit, expected='(')
+        # ??
+        index = self.compile_expression_list(tokens, index, compilation_unit)
+        # )
+        index = self.compile_symbol(tokens, index, compilation_unit, expected=')')
+        index = self.compile_symbol(tokens, index, compilation_unit, expected=';')
+
+        return index
+
 
     def compile_do_statement(self, tokens, index, compilation_unit):
         do_unit = ET.SubElement(compilation_unit, 'doStatement')
@@ -472,23 +516,7 @@ class CompilationEngine:
         index = self.compile_keyword(tokens, index, do_unit)
         # subroutineName OR className OR varName
         self.log_state('compile_do_statement', index, tokens)
-        index = self.compile_identifier(tokens, index, do_unit)
-
-        # we could be calling a standalone routine or a method; in the latter case we'll see a .
-        if (self.is_symbol_type(tokens[index], '.')):
-            self.log_state('compile_do_statement - method branch', index, tokens)
-            index = self.compile_symbol(tokens, index, do_unit, expected='.')
-            index = self.compile_identifier(tokens, index, do_unit)
-
-
-        self.log_state('compile_do_statement', index, tokens)
-        # (
-        index = self.compile_symbol(tokens, index, do_unit, expected='(')
-        # ??
-        index = self.compile_expression_list(tokens, index, do_unit)
-        # )
-        index = self.compile_symbol(tokens, index, do_unit, expected=')')
-        index = self.compile_symbol(tokens, index, do_unit, expected=';')
+        index = self.compile_subroutine_call(tokens, index, do_unit)
 
         return index
 
@@ -563,9 +591,9 @@ class CompilationEngine:
         expression_unit = ET.SubElement(compilation_unit, 'expression')
 
         index = self.compile_term(tokens, index, expression_unit)
-        if (self.is_operation(tokens[index])):
+        while (self.is_operation(tokens[index])):
             index = self.compile_symbol(tokens, index, expression_unit)
-            index = self.compile_expression(tokens, index, expression_unit)
+            index = self.compile_term(tokens, index, expression_unit)
 
         return index
 
@@ -574,10 +602,38 @@ class CompilationEngine:
         term_unit = ET.SubElement(compilation_unit, 'term')
         current_token = tokens[index]
 
-        if (self.is_integer_constant(current_token)):
-            index = self.simple_compile(current_token, index, 'integerConstant', term_unit)
-        elif (self.is_identifier(current_token)):
-            index = self.compile_identifier(tokens, index, term_unit)
+        # integer | string | keyword | varName | varName [ expression ] | subroutineCall | ( expression ) | unaryOpTerm
+        if (self.is_integer_constant(tokens[index])):
+            self.log_state('compile_term', index, tokens)
+            index = self.simple_compile(tokens[index], index, 'integerConstant', term_unit)
+        elif (self.is_string_constant(tokens[index])):
+            index = self.compile_string_constant(tokens, index, 'stringConstant', term_unit)
+        elif (self.is_keyword(tokens[index])):
+            index = self.compile_keyword(tokens, index, term_unit)
+        elif (self.is_identifier(tokens[index])):
+            # if we're at an identifier we could be looking at
+            # varName
+            # varName[expression]
+            # subroutineCall
+            if tokens[index+1].text == '[':
+                index = self.compile_identifier(tokens, index, term_unit)
+                index = self.compile_symbol(tokens, index, term_unit, expected='[')
+                index = self.compile_expression(tokens, index, term_unit)
+                index = self.compile_expression(tokens, index, term_unit, expected=']')
+            elif tokens[index+1].text in '(.':
+                index = self.compile_subroutine_call(tokens, index, term_unit)
+            else:
+                index = self.compile_identifier(tokens, index, term_unit)
+        elif self.is_symbol_type(tokens[index], '('):
+              index = self.compile_symbol(tokens, index, term_unit, expected='(')
+              index = self.compile_expression(tokens, index, term_unit)
+              index = self.compile_symbol(tokens, index, term_unit, expected=')')
+        elif self.is_unary_op(tokens[index]):
+              index = self.compile_symbol(tokens, index, term_unit)
+              index = self.compile_term(tokens, index, term_unit)
+        else:
+            raise JackParseError(f'compile_term called on an unexpected token {tokens[index].text}')
+
 
         return index
 

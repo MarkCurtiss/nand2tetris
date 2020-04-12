@@ -18,12 +18,12 @@ if [[ -d $FILE_OR_DIR ]]; then
     for JACK in $FILE_OR_DIR/*.jack; do
         COMPILED_FILE=$(dirname $JACK)/$(basename $JACK .jack).xml
         log "Now comparing (./compilation_engine.py $JACK) to $COMPILED_FILE"
-        diff -wB <(./compilation_engine.py $JACK) <(cat $COMPILED_FILE)
+        diff -wBU 3 <(./compilation_engine.py $JACK) <(./reformat-xml.py  $COMPILED_FILE)
     done
 else
     log "$FILE_OR_DIR is a file"
 
     COMPILED_FILE=$(dirname $FILE_OR_DIR)/$(basename $FILE_OR_DIR .jack).xml
     log "Now comparing (./compilation_engine.py $FILE_OR_DIR) to $COMPILED_FILE"
-    diff -wB <(./compilation_engine.py $FILE_OR_DIR) <(cat $COMPILED_FILE)
+    diff -wBU 3 <(./compilation_engine.py $FILE_OR_DIR) <(./reformat-xml.py $COMPILED_FILE)
 fi

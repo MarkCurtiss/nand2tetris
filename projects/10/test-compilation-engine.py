@@ -16,7 +16,7 @@ class CompilationEngineTest(unittest.TestCase):
     def reformat_xml_to_standardize_whitespace(self, xml):
         tree = ET.fromstring(''.join(xml.split()))
         self.compiler.prettify_elements(tree)
-        return ET.tostring(tree, encoding='unicode')
+        return ET.tostring(tree, encoding='unicode', short_empty_elements=False)
 
 
     def assert_xml_equal(self, actual_xml, expected_xml, debug_output=False):
@@ -130,6 +130,7 @@ class Main { }
     </subroutineDec>
     <symbol> } </symbol>
 </class>""")
+
 
     def test_subroutine_with_variables_and_no_statements(self):
         output = self.compiler.compile("""
@@ -298,18 +299,18 @@ class Main { }
 
 
     def test_if_no_else(self):
-            output = self.compiler.compile("""
-            class Main {
-                method void moveSquare() {
-                    if (direction) { do square.moveUp(); }
-                    if (direction) { do square.moveDown(); }
-                    return;
-            }
-            }""")
+        output = self.compiler.compile("""
+        class Main {
+        method void moveSquare() {
+        if (direction) { do square.moveUp(); }
+        if (direction) { do square.moveDown(); }
+        return;
+        }
+        }""")
 
-            self.assert_xml_equal(
-                output,
-                """<class>
+        self.assert_xml_equal(
+            output,
+            """<class>
   <keyword> class </keyword>
   <identifier> Main </identifier>
   <symbol> { </symbol>
@@ -384,3 +385,56 @@ class Main { }
   </subroutineDec>
   <symbol> } </symbol>
 </class>""")
+
+
+    def test_compound_let_statement(self):
+        output = self.compiler.compile("""
+            class Main {
+                function void main() {
+                    let i = i | j;
+                    return;
+                }
+            }""")
+
+        self.assert_xml_equal(
+            output,
+            """<class>
+  <keyword>class</keyword>
+  <identifier>Main</identifier>
+  <symbol>{</symbol>
+  <subroutineDec>
+    <keyword>function</keyword>
+    <keyword>void</keyword>
+    <identifier>main</identifier>
+    <symbol>(</symbol>
+    <parameterList></parameterList>
+    <symbol>)</symbol>
+    <subroutineBody>
+      <symbol>{</symbol>
+      <statements>
+        <letStatement>
+          <keyword>let</keyword>
+          <identifier>i</identifier>
+          <symbol>=</symbol>
+          <expression>
+            <term>
+              <identifier>i</identifier>
+            </term>
+            <symbol>|</symbol>
+            <term>
+              <identifier>j</identifier>
+            </term>
+          </expression>
+          <symbol>;</symbol>
+        </letStatement>
+        <returnStatement>
+          <keyword>return</keyword>
+          <symbol>;</symbol>
+        </returnStatement>
+      </statements>
+      <symbol>}</symbol>
+    </subroutineBody>
+  </subroutineDec>
+  <symbol>}</symbol>
+</class>
+            """, True)
