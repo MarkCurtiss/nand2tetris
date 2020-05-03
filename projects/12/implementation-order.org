@@ -1,0 +1,8 @@
+* DONE Array.jack
+* TODO Keyboard.jack
+* TODO Math.jack
+* TODO Memory.jack
+* TODO Output.jack
+* TODO Screen.jack
+* TODO String.jack
+* TODO Sys.jack
